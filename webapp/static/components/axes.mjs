@@ -36,6 +36,7 @@ function drawAxis(container, scale, orientation, dimensions, options = {}) {
         tickPadding,
         opacity = 1,
         removeDomain = false,
+        tickRotationDegree = 0,
     } = options;
 
     // Create the axis
@@ -70,6 +71,14 @@ function drawAxis(container, scale, orientation, dimensions, options = {}) {
     // Conditionally remove the domain
     if (removeDomain) {
         axisGroup.select(".domain").remove();
+    }
+
+    if (tickRotationDegree) {
+        axisGroup.selectAll(".tick text")
+            .attr("transform", `rotate(${tickRotationDegree})`)
+            .style("text-anchor", tickRotationDegree === 90 ? "start" : "middle")
+            .attr("dx", tickRotationDegree === 90 ? "0.5em" : "0")
+            .attr("dy", tickRotationDegree === 90 ? "-0.5em" : "0");
     }
 
     // Add axis label

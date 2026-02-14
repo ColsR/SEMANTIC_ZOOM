@@ -34,3 +34,26 @@ def export_event_log(df, filename: str, foldername="processed_event_data") -> pd
         raise ValueError("'Filename' must be an .xes file and\n\
                          be in the folder 'data/processed_event_data'.")
     return print("export complete.")
+
+def export_event_log_custom(df, file_path):
+
+    """Exports a DataFrame to an specified XES file"""
+    if file_path.endswith(".xes"):
+        df["timestamps"] = pd.to_datetime(df["timestamps"])
+        # TODO remove this probably later because these columns will not be present anymore
+        df.drop(columns=["time:timestamp:casestart", "time:timestamp:relative", "timestamp_relative_seconds", "time:relative:seconds:log", "ranks", "activity"], inplace=True, errors="ignore")
+        #df.rename(columns={"timestamps": "time:timestamp"}, inplace=True)
+        df = df.rename(columns={"timestamps": "time:timestamp"})
+        print("Exporting event log...")
+        print(df)
+        log = pm4py.convert_to_event_log(
+            df,
+            case_id_key="case",
+            activity_key="concept:name",
+            timestamp_key="time:timestamp"
+        )
+        pm4py.write_xes(log, file_path)
+    else:
+        raise ValueError("'Filename' must be an .xes file and\n\
+                         be in the folder 'data/processed_event_data'.")
+    return print("export complete.")

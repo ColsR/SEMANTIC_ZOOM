@@ -24,10 +24,11 @@ E-Mail: {firstname.lastname}@hu-berlin.de
 // -----
 
 // Access and parse data attributes
-const parseDate = d3.timeParse('%m/%d/%y %H:%M');
+const parseDate = d3.isoParse;
 const idAccessor = (d) => d.id;
-//const timeAccessor = (d) => parseDate(d.timestamp);
-const timeAccessor = (d) => parseFloat(d.timestamp_relative_seconds)  / 86400; // 86400 seconds in a day
+//const timeAccessor = (d) => parseDate(d.time_abstracted);
+const timeAccessor = (d) => parseDate(d.timestamps);
+//const timeAccessor = (d) => parseFloat(d.timestamp_relative_seconds)  / 86400; // 86400 seconds in a day
 const actAccessor = (d) => d.activity;
 const caseAccessor = (d) => d.case; //parseInt(d.case)
 const resAccessor = (d) => d.resources;
@@ -41,4 +42,5 @@ export {
   caseAccessor,
   resAccessor,
   nodes,
-  edges };
+  edges,
+  parseDate};

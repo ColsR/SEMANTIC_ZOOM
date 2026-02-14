@@ -20,6 +20,7 @@ E-Mail: {firstname.lastname}@hu-berlin.de
 '''
 
 import csv
+import shutil
 import sys
 import io
 import os
@@ -27,8 +28,11 @@ import pandas as pd
 import tempfile
 from flask import Blueprint, render_template, request, jsonify
 from pathlib import Path
+
+from src.clustering.general_clusterer import ABSTRACTION_FUNCTIONS
+from src.utils.data_exporting import export_event_log, export_event_log_custom
 from src.utils.data_importing import load_event_log_from_tempfile
-from src.orchestrator import process_log_for_d3js
+from src.orchestrator import process_log_for_d3js, process_log_for_d3js_abstractions
 
 # App directory
 project_root = Path(__file__).resolve().parent.parent
@@ -36,6 +40,8 @@ sys.path.append(str(project_root))
 
 bp = Blueprint("pages", __name__)
 
+
+FILEPATH = project_root / 'data' / 'working_data'
 # Import allowance fo file extensions
 ALLOWED_EXTENSIONS = {'csv', 'xes'}
 def allowed_file(filename):
@@ -57,26 +63,28 @@ def get_data():
 def upload_data():
     if 'file' not in request.files:
         return jsonify({'error': 'No file uploaded'}), 400
-    
+
     file = request.files['file']
     filename = file.filename
     ext = filename.rsplit('.', 1)[1].lower()
 
     if filename == '':
         return jsonify({'error': 'No file selected'}), 400
-    
+
     if not allowed_file(filename):
         return jsonify({'error': 'Invalid file type. Only {ALLOWED_EXTENSIONS} allowed.'}), 400
-    
+
     try:
         if ext == 'csv':
             stream = io.StringIO(file.stream.read().decode("utf-8"), newline=None)
             reader = csv.DictReader(stream)
             data = list(reader)
         elif ext == 'xes':
+            #file.save(f"{FILEPATH}/working_xes.xes")
             with tempfile.NamedTemporaryFile(delete=False, suffix=".xes") as tmp:
                 file.save(tmp)
                 tmp_path = tmp.name
+            shutil.copy(tmp_path, f"{FILEPATH}/working_xes.xes")
             df = load_event_log_from_tempfile(tmp_path)
             df = process_log_for_d3js(df)
             data = df.to_dict(orient='records')
@@ -87,3 +95,30 @@ def upload_data():
         return jsonify(data)
     except Exception as e:
         return jsonify({'error': str(e)}), 500
+
+@bp.route("/api/abstracted_data", methods=['POST'])
+def get_abstracted_data():
+    data = request.get_json()
+    requested_abstractions = data["abstractions"]
+    abstractions = [ABSTRACTION_FUNCTIONS[abstraction] for abstraction in requested_abstractions if abstraction in ABSTRACTION_FUNCTIONS]
+
+    # Load the non-abstracted log from the temporary file created during upload
+    df = load_event_log_from_tempfile(f"{FILEPATH}/working_xes.xes")
+
+    df = process_log_for_d3js_abstractions(df, abstractions)
+
+    # export the abstracted log to a csv and a xes file
+    df_copy =df.copy()
+    df_copy.to_csv(f"{FILEPATH}/volatile_working_csv.csv", index=False)
+    try:
+        export_event_log_custom(df_copy, f"{FILEPATH}/volatile_working_xes.xes")
+    except Exception as e:
+        print(f"Error exporting event log: {e}")
+
+    data = df.to_dict(orient='records')
+    return jsonify(data)
+
+@bp.route("/api/available_abstractions")
+def get_available_abstractions():
+    return jsonify(list(ABSTRACTION_FUNCTIONS.keys()))
+

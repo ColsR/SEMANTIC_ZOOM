@@ -38,10 +38,17 @@ def relativeTimestamps(df):
 
     return df
 
-def simplifyLog(df, lifecycle_activities=False, 
-                filter_cases = 0, filter_variants_k = 0, 
-                filter_variants_per = 0, 
-                act_col='concept:name', case_col='case:concept:name', 
+
+def timestamp_to_seconds(df):
+    print("converting timestamps to seconds...")
+    df["time_timestamp_seconds"] = df["time:timestamp:relative"].apply(lambda t: t.total_seconds()).astype(int)
+    print("conversion complete.")
+    return df
+
+def simplifyLog(df, lifecycle_activities=False,
+                filter_cases = 0, filter_variants_k = 0,
+                filter_variants_per = 0,
+                act_col='concept:name', case_col='case:concept:name',
                 time_col='time:timestamp', lifecycle_col='lifecycle:transition', res_col='org:resource'):
     '''simplifies a log by keeping only necessary attributes.
     '''
@@ -56,7 +63,7 @@ def simplifyLog(df, lifecycle_activities=False,
         else:
             keep_columns.remove(res_col)
     # create new activities with transitions, if applicable
-    if (lifecycle_activities == True and 
+    if (lifecycle_activities == True and
         lifecycle_col in df.columns):
         if len(df[lifecycle_col].unique()) > 1:
             df[act_col] = df[act_col] + '-' + df[lifecycle_col]
@@ -64,7 +71,7 @@ def simplifyLog(df, lifecycle_activities=False,
             print('Message: No transition-activity were be created. Only one type of lifecycle transition in log.')
     else:
         print('Message: No transition-activity were be created. No transition column.')
-    
+
     # LOG FILTERING
     # keep only k amount cases in the log
     total_num_variants = len(pm4py.get_variants(df))
@@ -86,7 +93,7 @@ def create_quantile_dict_from_grouped_dataframe(
     return df.groupby(colgroup)[colquantile].quantile(quantile).to_dict()
 
 def create_quantile_dataframe_from_dataframe(
-    df:pd.DataFrame, colgroup:str, 
+    df:pd.DataFrame, colgroup:str,
     colquantile:str, quantiles=[.0, .1, .25, .5, .75, .9, 1.]) -> pd.DataFrame:
     df_quantile = pd.DataFrame(df[colgroup].unique().tolist())
     df_quantile = df_quantile.rename(columns={0: colgroup})
@@ -128,15 +135,15 @@ def switch_item_key_in_dictionary(dictionary: dict):
     return switched_dictionary
 
 def rename_cols_for_d3csv(
-        df, time_col = 'time:timestamp', 
+        df, time_col = 'time:timestamp',
         reltime_col = 'time:relative:seconds', case_col = 'case:concept:name',
-        act_col = 'concept:name', resources_col = 'org:resource'):
+        act_col = 'concept:name', resources_col = 'org:resource', time_abstacted_col = 'time:timestamp_abstracted'):
     """Creates a dataframe with new column names for D3.js."""
 
     print(df.columns)
     if 'concept:name:ranked' in df.columns:
         act_col = 'concept:name:ranked'
-    
+
     if resources_col not in df.columns:
         resources_col = 'org:group'
 
@@ -145,7 +152,8 @@ def rename_cols_for_d3csv(
         reltime_col: 'timestamp_relative_seconds',
         case_col: 'case',
         act_col: 'activity',
-        resources_col: 'resources'
+        resources_col: 'resources',
+        time_abstacted_col: 'time_abstracted'
     }
     return df.rename(columns = columns_newnames)
 

@@ -30,7 +30,7 @@ let dimensions = {
     margin: 
     {
         top: 50,
-        bottom: 50,
+        bottom: 100,
         left: 230, //140 for standard // 230 for large activity names
         right: 50,
     }

@@ -26,6 +26,13 @@ E-Mail: {firstname.lastname}@hu-berlin.de
 import { exportData } from './utils/exportData.mjs';
 import { TIMEORDERMAP } from './views/timeOrderMap.js';
 import { SPACEORDERMAP } from './views/spaceOrderMap.js';
+import { ABSTRACTEDMAP} from "./views/AbstractedMap.js";
+
+let OLD_DATA_GET = 0;
+const ABSTRACTIONS = {
+  abstractions: []
+};
+
 
 // == MAIN GRAPH DRAWING FUNCTION ==
 async function draw(inputData = null) {
@@ -34,16 +41,31 @@ async function draw(inputData = null) {
     // Data import
     let csvdata = inputData;
     if (!csvdata) {
-        try {
-            csvdata = await d3.json('/api/get_data');
-        } catch (err) {
-            console.error("Failed to load default data:", err);
-            return;
+        if (OLD_DATA_GET) {
+            try {
+                csvdata = await d3.json('/api/get_data');
+            } catch (err) {
+                console.error("Failed to load default data:", err);
+                return;
+            }
+        } else {
+            const response = await fetch('/api/abstracted_data', {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json'
+              },
+              body: JSON.stringify(ABSTRACTIONS)
+            });
+
+              console.log("Response received from server:", response.status);
+              csvdata = await response.json();
+              console.log("Server response:", csvdata);
         }
+
     }
 
     // Variable initialization
-    let graphViewSelection = 0; // 0: Time-Order Map, 1: Space-Order Map
+    let graphViewSelection = 2; // 0: Time-Order Map, 1: Space-Order Map, 2: Abstracted-Map
 
     // == GRAPH VIEW SELECTION ==
     graphViewSwitcher(graphViewSelection, csvdata);
@@ -60,7 +82,12 @@ async function draw(inputData = null) {
             d3.select("#chart").selectAll("*").remove();
             d3.select("h1").text("Space-Order Map (work-in-progress)");
             SPACEORDERMAP(csvdata);
-        } else {
+        } else if (graphViewSelection === 2) {
+            console.info("Switching to Abstracted Map");
+            d3.select("#chart").selectAll("*").remove();
+            ABSTRACTEDMAP(csvdata);
+        }
+        else {
             console.error("Unknown view:", graphViewSelection);
         }
     }
@@ -104,7 +131,7 @@ document.getElementById('upload-form').addEventListener('submit', async function
   console.log("Response received from server:", response.status);
   const uploadedData = await response.json();
   console.log("Server response:", uploadedData);
-  draw(uploadedData); 
+  draw(uploadedData);
 });
 
 // Reset the chart with default data
@@ -112,3 +139,38 @@ const resetButton = document.getElementById('button-reset');
 resetButton.addEventListener('click', () => {
   draw(null);
 });
+
+
+async function loadAvailableAbstractions() {
+  const response = await fetch("/api/available_abstractions");
+  const abstractions = await response.json();
+
+  const select = document.getElementById("abstractions");
+
+  abstractions.forEach(key => {
+    const option = document.createElement("option");
+    option.value = key;
+    option.textContent = prettifyAbstractionName(key);
+    select.appendChild(option);
+  });
+
+  // Eventlistener für Änderungen
+  select.addEventListener("change", () => {
+    // Aktualisiere ABSTRACTIONS basierend auf Auswahl
+    ABSTRACTIONS.abstractions = Array.from(select.selectedOptions)
+                                     .map(opt => opt.value);
+
+    console.log("Neue Abstraktionen:", ABSTRACTIONS);
+
+    // draw() aufrufen
+    draw();
+  });
+}
+
+function prettifyAbstractionName(key) {
+  return key
+    .replaceAll("_", " ")
+    .replace(/\b\w/g, c => c.toUpperCase());
+}
+
+document.addEventListener("DOMContentLoaded", loadAvailableAbstractions);
