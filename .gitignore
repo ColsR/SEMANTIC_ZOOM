@@ -27,6 +27,7 @@ data/evaluation_data/roadtrafficfine_1050.xes
 data/evaluation_data/sepsis.xes
 data/test_data/
 data/abstracted_df.csv
+data/working_data/*
 
 # Test notebooks
 notebooks/test_notebook.ipynb

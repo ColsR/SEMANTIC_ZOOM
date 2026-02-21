@@ -29,6 +29,7 @@ import tempfile
 from flask import Blueprint, render_template, request, jsonify
 from pathlib import Path
 
+from src.algo.super_graph import build_super_graph
 from src.clustering.general_clusterer import ABSTRACTION_FUNCTIONS
 from src.utils.data_exporting import export_event_log, export_event_log_custom
 from src.utils.data_importing import load_event_log_from_tempfile
@@ -115,7 +116,9 @@ def get_abstracted_data():
     except Exception as e:
         print(f"Error exporting event log: {e}")
 
-    data = df.to_dict(orient='records')
+    # Build the super nodes and super edges
+    super_df = build_super_graph(df)
+    data = super_df.to_dict(orient='records')
     return jsonify(data)
 
 @bp.route("/api/available_abstractions")
