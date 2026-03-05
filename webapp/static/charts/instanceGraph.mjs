@@ -62,6 +62,17 @@ function renderInstanceGraph(graphData, link, container, xAccessor, xScale, yAcc
             );
 
     // Draw events
+
+    const tooltip = d3.select("body")
+      .append("div")
+      .attr("class", "tooltip")
+      .style("position", "absolute")
+      .style("visibility", "hidden")
+      .style("background", "white")
+      .style("border", "1px solid #ccc")
+      .style("padding", "5px")
+      .style("font-size", "12px");
+
     const events = ctrInstance.append('g')
         .attr("class", classNameNodes)
 
@@ -77,6 +88,27 @@ function renderInstanceGraph(graphData, link, container, xAccessor, xScale, yAcc
         .attr('activity', actAccessor)
         .attr('timestamp', timeAccessor)
         .attr('resource', resAccessor)
+        .on("mouseover", function(event, d) {
+
+
+            tooltip
+              .style("visibility", "visible")
+              .html(`
+                <b>Activity:</b> ${actAccessor(d)}<br>
+                <b>Case:</b> ${caseAccessor(d)}<br>
+                <b>Resource:</b> ${resAccessor(d)}<br>
+                <b>Timestamp:</b> ${timeAccessor(d)}
+              `);
+
+        })
+        .on("mousemove", function(event) {
+            tooltip
+              .style("top", (event.pageY + 10) + "px")
+              .style("left", (event.pageX + 10) + "px");
+        })
+        .on("mouseout", function() {
+            tooltip.style("visibility", "hidden");
+        });
 }
 
 export { renderInstanceGraph };
