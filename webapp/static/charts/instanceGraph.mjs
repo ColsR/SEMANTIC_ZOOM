@@ -82,15 +82,14 @@ function renderInstanceGraph(graphData, link, container, xAccessor, xScale, yAcc
         .attr('id', d => `node-${d.id}`) // keys to find these elements
         .attr('cx', d => xScale(xAccessor(d)))
         .attr('cy', d => yScale(yAccessor(d)))
-        .attr('r', 2)
+        .attr('r', 4)
         .attr('class', classNameNode)
         .attr('case', caseAccessor)
         .attr('activity', actAccessor)
         .attr('timestamp', timeAccessor)
         .attr('resource', resAccessor)
         .on("mouseover", function(event, d) {
-
-
+            d3.select(this).classed("event-circle-hovered", true)
             tooltip
               .style("visibility", "visible")
               .html(`
@@ -107,8 +106,10 @@ function renderInstanceGraph(graphData, link, container, xAccessor, xScale, yAcc
               .style("left", (event.pageX + 10) + "px");
         })
         .on("mouseout", function() {
+            d3.select(this).classed("event-circle-hovered", false)
             tooltip.style("visibility", "hidden");
-        });
+        })
+    ;
 }
 
 export { renderInstanceGraph };

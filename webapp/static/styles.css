@@ -135,6 +135,10 @@ h3 {
   r: 4px;
 }
 
+.event-circle-hovered {
+    r: 6px;
+}
+
 .event-circle-mean {
   fill: #fee090; 
   /*stroke: rgb(206, 69, 69);*/
