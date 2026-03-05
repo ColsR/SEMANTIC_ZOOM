@@ -12,18 +12,35 @@ def rename_abstraction(df, column, abstraction):
     df[column] = df[column].apply(lambda x: abstraction(x))
     return df
 
+def abstract_instance(event_attribute):
+    return event_attribute
+
 
 
 ABSTRACTION_FUNCTIONS = {
-    "time_month": ('time:timestamp', time_clusterer.abstract_time_to_month),
-    "time_week": ('time:timestamp', time_clusterer.abstract_time_to_week),
-    "time_day": ('time:timestamp', time_clusterer.abstract_time_to_day),
-    "time_hour": ('time:timestamp', time_clusterer.abstract_time_to_hour),
-    "time_minute": ('time:timestamp', time_clusterer.abstract_time_to_minute),
-    "activity_abstracted": ('concept:name', activity_clusterer.abstract_activity),
-    "activity_abstracted2": ('concept:name', activity_clusterer.abstract_activity2),
-    "resource_abstracted": ('org:resource', ressource_clusterer.abstract_resource_complete)
+    "time":
+        {
+            "time_month": ('time:timestamp', time_clusterer.abstract_time_to_month),
+            "time_week": ('time:timestamp', time_clusterer.abstract_time_to_week),
+            "time_day": ('time:timestamp', time_clusterer.abstract_time_to_day),
+            "time_hour": ('time:timestamp', time_clusterer.abstract_time_to_hour),
+            "time_minute": ('time:timestamp', time_clusterer.abstract_time_to_minute),
+            "time_not_abstracted": ('time:timestamp', abstract_instance)
+        },
+    "activity":
+        {
+            "activity_abstracted2": ('concept:name', activity_clusterer.abstract_activity2),
+            "activity_abstracted": ('concept:name', activity_clusterer.abstract_activity),
+            "activity_not_abstracted": ('concept:name', abstract_instance)
+        },
+    "resource":
+        {
+            "resource_abstracted": ('org:resource', ressource_clusterer.abstract_resource_complete),
+            "resource_not_abstracted": ('org:resource', abstract_instance)
+        },
 }
+
+FLAT_ABSTRACTION_FUNCTIONS = {k: v for group in ABSTRACTION_FUNCTIONS.values() for k, v in group.items()}
 
 
 def abstraction_1(df):

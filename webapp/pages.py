@@ -30,10 +30,11 @@ from flask import Blueprint, render_template, request, jsonify
 from pathlib import Path
 
 from src.algo.super_graph import build_super_graph
-from src.clustering.general_clusterer import ABSTRACTION_FUNCTIONS
+from src.clustering.general_clusterer import ABSTRACTION_FUNCTIONS, FLAT_ABSTRACTION_FUNCTIONS
+from src.clustering.specific_clusterer import EXCLUDING_FUNCTIONS
 from src.utils.data_exporting import export_event_log, export_event_log_custom
 from src.utils.data_importing import load_event_log_from_tempfile
-from src.orchestrator import process_log_for_d3js, process_log_for_d3js_abstractions
+from src.orchestrator import process_log_for_d3js, process_log_for_d3js_abstractions, process_log_for_d3js_exclusions
 
 # App directory
 project_root = Path(__file__).resolve().parent.parent
@@ -100,13 +101,22 @@ def upload_data():
 @bp.route("/api/abstracted_data", methods=['POST'])
 def get_abstracted_data():
     data = request.get_json()
-    requested_abstractions = data["abstractions"]
-    abstractions = [ABSTRACTION_FUNCTIONS[abstraction] for abstraction in requested_abstractions if abstraction in ABSTRACTION_FUNCTIONS]
+    requested_abstractions = data.get("abstractions")
+    print(f"requested abstractions: {requested_abstractions}")
+
+    abstractions = [FLAT_ABSTRACTION_FUNCTIONS[abstraction] for abstraction in requested_abstractions if abstraction in FLAT_ABSTRACTION_FUNCTIONS.keys()]
+    print(f"abstractions: {abstractions}")
+    requested_exclusions = data.get("exclusions")
+    print(f"requested exclusions: {requested_exclusions}")
+    exclusions = [EXCLUDING_FUNCTIONS[exclusion] for exclusion in requested_exclusions if
+                    exclusion in EXCLUDING_FUNCTIONS]
 
     # Load the non-abstracted log from the temporary file created during upload
     df = load_event_log_from_tempfile(f"{FILEPATH}/working_xes.xes")
-
-    df = process_log_for_d3js_abstractions(df, abstractions)
+    if len(exclusions) > 0:
+        df = process_log_for_d3js_exclusions(df, exclusions)
+    else:
+        df = process_log_for_d3js_abstractions(df, abstractions)
 
     # export the abstracted log to a csv and a xes file
     df_copy =df.copy()
@@ -123,5 +133,10 @@ def get_abstracted_data():
 
 @bp.route("/api/available_abstractions")
 def get_available_abstractions():
-    return jsonify(list(ABSTRACTION_FUNCTIONS.keys()))
+    abstraction_keys = {attr : list(ABSTRACTION_FUNCTIONS[attr].keys()) for attr in ABSTRACTION_FUNCTIONS.keys()}
+    return jsonify(abstraction_keys)
+
+@bp.route("/api/available_exclusions")
+def get_available_exclusions():
+    return jsonify(list(EXCLUDING_FUNCTIONS.keys()))
 

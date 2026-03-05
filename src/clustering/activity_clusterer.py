@@ -27,3 +27,4 @@ def abstract_activity2(activity):
         case 'pay compensation': return 'decision'
         case _:
             return activity
+

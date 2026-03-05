@@ -1,176 +1,1 @@
-/*
-SEAMLESS_ZOOM — A technique for seamless zooming between process models and process instances.
-Copyright (C) 2025  Christoffer Rubensson
-
-This program is free software: you can redistribute it and/or modify
-it under the terms of the GNU Affero General Public License as
-published by the Free Software Foundation, either version 3 of the
-License, or any later version.
-
-This program is distributed in the hope that it will be useful,
-but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-GNU Affero General Public License for more details.
-
-You should have received a copy of the GNU Affero General Public License
-along with this program.  If not, see <https://www.gnu.org/licenses/>.
-
-Website: https://hu-berlin.de/rubensson
-E-Mail: {firstname.lastname}@hu-berlin.de
-*/
-
-// -----------------------------
-// MAIN DRAWING FUNCTION
-// -----------------------------
-// == IMPORT ==
-import { exportData } from './utils/exportData.mjs';
-import { TIMEORDERMAP } from './views/timeOrderMap.js';
-import { SPACEORDERMAP } from './views/spaceOrderMap.js';
-import { ABSTRACTEDMAP} from "./views/AbstractedMap.js";
-
-let OLD_DATA_GET = 0;
-const ABSTRACTIONS = {
-  abstractions: []
-};
-
-
-// == MAIN GRAPH DRAWING FUNCTION ==
-async function draw(inputData = null) {
-    // == INITIALIZATION ==
-    d3.select("#chart").selectAll("*").remove();
-    // Data import
-    let csvdata = inputData;
-    if (!csvdata) {
-        if (OLD_DATA_GET) {
-            try {
-                csvdata = await d3.json('/api/get_data');
-            } catch (err) {
-                console.error("Failed to load default data:", err);
-                return;
-            }
-        } else {
-            const response = await fetch('/api/abstracted_data', {
-              method: 'POST',
-              headers: {
-                'Content-Type': 'application/json'
-              },
-              body: JSON.stringify(ABSTRACTIONS)
-            });
-
-              console.log("Response received from server:", response.status);
-              csvdata = await response.json();
-              console.log("Server response:", csvdata);
-        }
-
-    }
-
-    // Variable initialization
-    let graphViewSelection = 2; // 0: Time-Order Map, 1: Space-Order Map, 2: Abstracted-Map
-
-    // == GRAPH VIEW SELECTION ==
-    graphViewSwitcher(graphViewSelection, csvdata);
-    // Function to switch between graph views
-    function graphViewSwitcher(graphViewSelection, csvdata) {
-        if (graphViewSelection === 0) {
-            console.info("Switching to Time-Order Map");
-            d3.select("#chart").selectAll("*").remove();
-            // Update the page title (h1)
-            //d3.select("h1").text("Time-Order Map");
-            TIMEORDERMAP(csvdata);
-        } else if (graphViewSelection === 1) {
-            console.info("Switching to Space-Order Map");
-            d3.select("#chart").selectAll("*").remove();
-            d3.select("h1").text("Space-Order Map (work-in-progress)");
-            SPACEORDERMAP(csvdata);
-        } else if (graphViewSelection === 2) {
-            console.info("Switching to Abstracted Map");
-            d3.select("#chart").selectAll("*").remove();
-            ABSTRACTEDMAP(csvdata);
-        }
-        else {
-            console.error("Unknown view:", graphViewSelection);
-        }
-    }
-    // Listener for switching graph viewer
-    d3.selectAll('input[name="option-switcher-graph-view"]').on("change", function () {
-        graphViewSelection = +this.value;
-        graphViewSwitcher(graphViewSelection, csvdata);
-    });
-};
-
-draw();
-
-// == EXPORT GRAPH ==
-// Export button
-const exportButton = document.getElementById('button-export');
-exportButton.addEventListener('click', () => {
-  console.log("Exporting data...");
-  exportData();
-  console.log("Data exported successfully.");
-});
-
-
-// Redraw the chart with uploaded data
-document.getElementById('upload-form').addEventListener('submit', async function (e) {
-  e.preventDefault();
-
-  console.log("Uploading data...");
-  const fileInput = document.getElementById('file-input');
-  if (!fileInput.files.length) return;
-
-  console.log("File selected:", fileInput.files[0].name);
-  const formData = new FormData();
-  formData.append('file', fileInput.files[0]);
-
-  console.log("Form data prepared for upload.");
-  const response = await fetch('/api/upload_data', {
-    method: 'POST',
-    body: formData
-  });
-
-  console.log("Response received from server:", response.status);
-  const uploadedData = await response.json();
-  console.log("Server response:", uploadedData);
-  draw(uploadedData);
-});
-
-// Reset the chart with default data
-const resetButton = document.getElementById('button-reset');
-resetButton.addEventListener('click', () => {
-  draw(null);
-});
-
-
-async function loadAvailableAbstractions() {
-  const response = await fetch("/api/available_abstractions");
-  const abstractions = await response.json();
-
-  const select = document.getElementById("abstractions");
-
-  abstractions.forEach(key => {
-    const option = document.createElement("option");
-    option.value = key;
-    option.textContent = prettifyAbstractionName(key);
-    select.appendChild(option);
-  });
-
-  // Eventlistener für Änderungen
-  select.addEventListener("change", () => {
-    // Aktualisiere ABSTRACTIONS basierend auf Auswahl
-    ABSTRACTIONS.abstractions = Array.from(select.selectedOptions)
-                                     .map(opt => opt.value);
-
-    console.log("Neue Abstraktionen:", ABSTRACTIONS);
-
-    // draw() aufrufen
-    draw();
-  });
-}
-
-function prettifyAbstractionName(key) {
-  return key
-    .replaceAll("_", " ")
-    .replace(/\b\w/g, c => c.toUpperCase());
-}
-
-document.addEventListener("DOMContentLoaded", loadAvailableAbstractions);
+/*SEAMLESS_ZOOM — A technique for seamless zooming between process models and process instances.Copyright (C) 2025  Christoffer RubenssonThis program is free software: you can redistribute it and/or modifyit under the terms of the GNU Affero General Public License aspublished by the Free Software Foundation, either version 3 of theLicense, or any later version.This program is distributed in the hope that it will be useful,but WITHOUT ANY WARRANTY; without even the implied warranty ofMERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See theGNU Affero General Public License for more details.You should have received a copy of the GNU Affero General Public Licensealong with this program.  If not, see <https://www.gnu.org/licenses/>.Website: https://hu-berlin.de/rubenssonE-Mail: {firstname.lastname}@hu-berlin.de*/// -----------------------------// MAIN DRAWING FUNCTION// -----------------------------// == IMPORT ==import { exportData } from './utils/exportData.mjs';import { TIMEORDERMAP } from './views/timeOrderMap.js';import { SPACEORDERMAP } from './views/spaceOrderMap.js';import { ABSTRACTEDMAP} from "./views/AbstractedMap.js";let OLD_DATA_GET = 0;const ABSTRACTIONS = {    abstractions: []};const EXCLUSIONS = {    exclusions: []};// == MAIN GRAPH DRAWING FUNCTION ==async function draw(inputData = null) {    // == INITIALIZATION ==    d3.select("#chart").selectAll("*").remove();    // Data import    let csvdata = inputData;    if (!csvdata) {        if (OLD_DATA_GET) {            try {                csvdata = await d3.json('/api/get_data');            } catch (err) {                console.error("Failed to load default data:", err);                return;            }        } else {            const payload = {                abstractions: ABSTRACTIONS.abstractions,   // Array der gewählten Abstractions                exclusions: EXCLUSIONS.exclusions        // Array der gewählten Exclusions            };            const response = await fetch('/api/abstracted_data', {              method: 'POST',              headers: {                'Content-Type': 'application/json'              },              body: JSON.stringify(payload)            });              console.log("Response received from server:", response.status);              csvdata = await response.json();              console.log("Server response:", csvdata);        }    }    // Variable initialization    let graphViewSelection = 2; // 0: Time-Order Map, 1: Space-Order Map, 2: Abstracted-Map    // == GRAPH VIEW SELECTION ==    graphViewSwitcher(graphViewSelection, csvdata);    // Function to switch between graph views    function graphViewSwitcher(graphViewSelection, csvdata) {        if (graphViewSelection === 0) {            console.info("Switching to Time-Order Map");            d3.select("#chart").selectAll("*").remove();            // Update the page title (h1)            //d3.select("h1").text("Time-Order Map");            TIMEORDERMAP(csvdata);        } else if (graphViewSelection === 1) {            console.info("Switching to Space-Order Map");            d3.select("#chart").selectAll("*").remove();            d3.select("h1").text("Space-Order Map (work-in-progress)");            SPACEORDERMAP(csvdata);        } else if (graphViewSelection === 2) {            console.info("Switching to Abstracted Map");            d3.select("#chart").selectAll("*").remove();            ABSTRACTEDMAP(csvdata);        }        else {            console.error("Unknown view:", graphViewSelection);        }    }    // Listener for switching graph viewer    d3.selectAll('input[name="option-switcher-graph-view"]').on("change", function () {        graphViewSelection = +this.value;        graphViewSwitcher(graphViewSelection, csvdata);    });};draw();// == EXPORT GRAPH ==// Export buttonconst exportButton = document.getElementById('button-export');exportButton.addEventListener('click', () => {  console.log("Exporting data...");  exportData();  console.log("Data exported successfully.");});// Redraw the chart with uploaded datadocument.getElementById('upload-form').addEventListener('submit', async function (e) {  e.preventDefault();  console.log("Uploading data...");  const fileInput = document.getElementById('file-input');  if (!fileInput.files.length) return;  console.log("File selected:", fileInput.files[0].name);  const formData = new FormData();  formData.append('file', fileInput.files[0]);  console.log("Form data prepared for upload.");  const response = await fetch('/api/upload_data', {    method: 'POST',    body: formData  });  console.log("Response received from server:", response.status);  const uploadedData = await response.json();  console.log("Server response:", uploadedData);  draw(uploadedData);});// Reset the chart with default dataconst resetButton = document.getElementById('button-reset');resetButton.addEventListener('click', () => {  draw(null);});/*async function loadAvailableAbstractions() {  const response = await fetch("/api/available_abstractions");  const abstractions = await response.json();   const container = document.getElementById("abstractions-container");   Object.entries(abstractions).forEach(([type, options]) => {    const wrapper = document.createElement("div");    const label = document.createElement("label");    label.textContent = type + ":";    const select = document.createElement("select");    options.forEach(key => {      const option = document.createElement("option");      option.value = key;      option.textContent = prettifyAbstractionName(key);      select.appendChild(option);    });    select.addEventListener("change", () => {      const selectedKey = select.value;      // alte Abstraktion dieses Typs entfernen      ABSTRACTIONS.abstractions = ABSTRACTIONS.abstractions        .filter(a => !a.startsWith(type + "_"));      // neue hinzufügen      ABSTRACTIONS.abstractions.push(selectedKey);      console.log("Neue Abstraktionen:", ABSTRACTIONS);      draw();    });    wrapper.appendChild(label);    wrapper.appendChild(select);    container.appendChild(wrapper);  });} */async function loadAvailableAbstractions() {  const response = await fetch("/api/available_abstractions");  const abstractions = await response.json();  const container = document.getElementById("abstractions-container");  Object.entries(abstractions).forEach(([type, options]) => {    const wrapper = document.createElement("div");    wrapper.classList.add("slider-row");    // Label    const label = document.createElement("label");    label.textContent = type + ":";    // Slider    const slider = document.createElement("input");    slider.type = "range";    slider.min = 0;    slider.max = options.length - 1;    slider.step = 1;    slider.value = 0;    // Wert-Label    const valueLabel = document.createElement("span");    valueLabel.textContent = prettifyAbstractionName(options[0]);    const ticksContainer = document.createElement("div");      ticksContainer.classList.add("slider-ticks");      options.forEach(opt => {        const tick = document.createElement("span");        tick.textContent = prettifyAbstractionName(opt);        ticksContainer.appendChild(tick);      });    // Eventlistener    slider.addEventListener("input", () => {      const selectedIndex = parseInt(slider.value);      const selectedKey = options[selectedIndex];      valueLabel.textContent = prettifyAbstractionName(selectedKey);      // alte Abstraktion dieses Typs entfernen      ABSTRACTIONS.abstractions = ABSTRACTIONS.abstractions        .filter(a => !a.startsWith(type + "_"));      // neue hinzufügen      ABSTRACTIONS.abstractions.push(selectedKey);      console.log("Neue Abstraktionen:", ABSTRACTIONS);      draw();    });    // DOM zusammenfügen    wrapper.appendChild(label);    wrapper.appendChild(slider);    wrapper.appendChild(valueLabel);    wrapper.appendChild(ticksContainer);    container.appendChild(wrapper);  });}function prettifyAbstractionName(key) {  return key    .replaceAll("_", " ")    .replace(/\b\w/g, c => c.toUpperCase());}document.addEventListener("DOMContentLoaded", loadAvailableAbstractions);async function loadAvailableExcludsions() {  const response = await fetch("/api/available_exclusions");  const exclusions = await response.json();  const select = document.getElementById("exclusions");  exclusions.forEach(key => {    const option = document.createElement("option");    option.value = key;    option.textContent = prettifyAbstractionName(key);    select.appendChild(option);  });  // Eventlistener für Änderungen  select.addEventListener("change", () => {    // Aktualisiere ABSTRACTIONS basierend auf Auswahl    EXCLUSIONS.exclusions = Array.from(select.selectedOptions)                                     .map(opt => opt.value);    console.log("Neue EXCLUSION:", EXCLUSIONS);    // draw() aufrufen    draw();  });}document.addEventListener("DOMContentLoaded", loadAvailableExcludsions);
