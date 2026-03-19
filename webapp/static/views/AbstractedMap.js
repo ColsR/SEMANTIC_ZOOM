@@ -1,5 +1,5 @@
 import {convertLogtoGraph, getUniqueValues} from "../utils/processData.mjs";
-import {actAccessor, caseAccessor, idAccessor, nodes, parseDate, timeAccessor} from "../utils/parsers.mjs";
+import {actAccessor, caseAccessor, idAccessor, nodes, parseDate, resAccessor, timeAccessor} from "../utils/parsers.mjs";
 import {SCALE} from "../layout/scales.mjs";
 import {dimensions} from "../layout/chartDimensions.mjs";
 import {defineArrowHeads} from "../components/arrowheads.mjs";
@@ -7,10 +7,14 @@ import {defineLinkBezier, defineLinkVertical} from "../vizmodules/linkCalculator
 import {drawAxis} from "../components/axes.mjs";
 import {CONTOURGRAPH} from "../charts/contourGraph.mjs";
 import {renderInstanceGraph} from "../charts/instanceGraph.mjs";
+import {getAccessor} from "../utils/accessorMapper.mjs";
 
 
-export function ABSTRACTEDMAP(csvdata) {
+export function ABSTRACTEDMAP(csvdata, x_accessor_name="time", y_accessor_name="activity") {
     console.info("Drawing Test View");
+
+    let x_accessor = timeAccessor;
+    let y_accessor = getAccessor(y_accessor_name);
     // Your test view drawing code here
     let currentContourBandwidth = 60;
     let currentContourThreshold = 3;
@@ -18,15 +22,16 @@ export function ABSTRACTEDMAP(csvdata) {
 
     console.log("PARSING:" + parseDate("2010-12-30T14:32:00"));
 
-    const data = convertLogtoGraph(csvdata, caseAccessor, timeAccessor, actAccessor, idAccessor);
+    const data = convertLogtoGraph(csvdata, caseAccessor, timeAccessor, y_accessor, idAccessor);
     console.log("DATA is:" + data);
     console.log("Nodes are:" + nodes(data));
 
     let activities = getUniqueValues(nodes(data), actAccessor);
+    let y_values = getUniqueValues(nodes(data), y_accessor);
     //const xScale = SCALE.linear(d3.extent(nodes(data), timeAccessor), dimensions, { vertical: false });
     console.log("Extent of dates:", d3.extent(nodes(data), timeAccessor));
     const xScale = SCALE.timeUTC(d3.extent(nodes(data), timeAccessor), dimensions, { vertical: false });
-    const yScale = SCALE.categories(activities, dimensions);
+    const yScale = SCALE.categories(y_values, dimensions);
 
     const svg = d3.select('#chart')
         .append("svg")
@@ -75,7 +80,7 @@ export function ABSTRACTEDMAP(csvdata) {
     });
 
 
-    renderInstanceGraph(data, linkInstance, ctr, timeAccessor, xScale, actAccessor, yScale);
+    renderInstanceGraph(data, linkInstance, ctr, timeAccessor, xScale, y_accessor, yScale);
     console.log("end")
 
 }

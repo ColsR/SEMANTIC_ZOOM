@@ -30,6 +30,7 @@ from flask import Blueprint, render_template, request, jsonify
 from pathlib import Path
 
 from src.algo.super_graph import build_super_graph
+#from src.analysis.attribute_extractor import AttributeExtractor
 from src.clustering.general_clusterer import ABSTRACTION_FUNCTIONS, FLAT_ABSTRACTION_FUNCTIONS
 from src.clustering.specific_clusterer import EXCLUDING_FUNCTIONS
 from src.utils.data_exporting import export_event_log, export_event_log_custom
@@ -86,15 +87,16 @@ def upload_data():
             with tempfile.NamedTemporaryFile(delete=False, suffix=".xes") as tmp:
                 file.save(tmp)
                 tmp_path = tmp.name
-            shutil.copy(tmp_path, f"{FILEPATH}/working_xes.xes")
-            df = load_event_log_from_tempfile(tmp_path)
-            df = process_log_for_d3js(df)
-            data = df.to_dict(orient='records')
+            shutil.copy(tmp_path, f"{FILEPATH}/persistent_log.xes")
+            #attribute_extractor = AttributeExtractor(tmp_path)
+            #attribute_extractor.extract_attributes()
+            #print(f"Extracted trace attributes: {attribute_extractor.trace_attributes}")
+            #print(f"Extracted event attributes: {attribute_extractor.event_attributes}")
             # Clean up temporary file
             os.remove(tmp_path)
         else:
             return jsonify({'error': 'Unsupported file type'}), 400
-        return jsonify(data)
+        return jsonify({'success': 'OK'}), 200
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
@@ -112,7 +114,7 @@ def get_abstracted_data():
                     exclusion in EXCLUDING_FUNCTIONS]
 
     # Load the non-abstracted log from the temporary file created during upload
-    df = load_event_log_from_tempfile(f"{FILEPATH}/working_xes.xes")
+    df = load_event_log_from_tempfile(f"{FILEPATH}/persistent_log.xes")
     if len(exclusions) > 0:
         df = process_log_for_d3js_exclusions(df, exclusions)
     else:
