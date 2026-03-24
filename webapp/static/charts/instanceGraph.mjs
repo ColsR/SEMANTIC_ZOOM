@@ -24,8 +24,9 @@ E-Mail: {firstname.lastname}@hu-berlin.de
 // -----
 
 import { caseAccessor, actAccessor, timeAccessor, resAccessor, nodes, edges } from "../utils/parsers.mjs";
+import {getAccessors} from "../utils/parserGenerator.mjs";
 
-function renderInstanceGraph(graphData, link, container, xAccessor, xScale, yAccessor, yScale, options = {}) {
+async function renderInstanceGraph(graphData, link, container, xAccessor, xScale, yAccessor, yScale, options = {}) {
     // Graph initialization
     const {
         classNameGraph = "instance-graph",
@@ -75,7 +76,7 @@ function renderInstanceGraph(graphData, link, container, xAccessor, xScale, yAcc
 
     const events = ctrInstance.append('g')
         .attr("class", classNameNodes)
-
+    const accessors = await getAccessors();
     events.selectAll('circle')
         .data(nodes(graphData))
         .join('circle')
@@ -84,20 +85,17 @@ function renderInstanceGraph(graphData, link, container, xAccessor, xScale, yAcc
         .attr('cy', d => yScale(yAccessor(d)))
         .attr('r', 4)
         .attr('class', classNameNode)
-        .attr('case', caseAccessor)
-        .attr('activity', actAccessor)
-        .attr('timestamp', timeAccessor)
-        .attr('resource', resAccessor)
         .on("mouseover", function(event, d) {
             d3.select(this).classed("event-circle-hovered", true)
+            let tooltipHtml = "";
+
+            for (const [key, accessor] of Object.entries(accessors)) {
+                tooltipHtml += `<b>${key}:</b> ${accessor(d)}<br>`;
+            }
+
             tooltip
               .style("visibility", "visible")
-              .html(`
-                <b>Activity:</b> ${actAccessor(d)}<br>
-                <b>Case:</b> ${caseAccessor(d)}<br>
-                <b>Resource:</b> ${resAccessor(d)}<br>
-                <b>Timestamp:</b> ${timeAccessor(d)}
-              `);
+              .html(tooltipHtml);
 
         })
         .on("mousemove", function(event) {
