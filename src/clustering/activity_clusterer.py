@@ -1,3 +1,6 @@
+from src.clustering import instance_clusterer
+from src.clustering.time_clusterer import get_all
+
 
 def abstract_activity(activity):
     match activity:
@@ -28,3 +31,8 @@ def abstract_activity2(activity):
         case _:
             return activity
 
+def get_all(col_name):
+    return {
+        "activity_abstracted": (col_name, instance_clusterer.abstract_instance_complete),
+        "activity_not_abstracted": (col_name, instance_clusterer.abstract_instance),
+    }

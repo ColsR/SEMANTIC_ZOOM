@@ -27,11 +27,12 @@ E-Mail: {firstname.lastname}@hu-berlin.de
 const parseDate = d3.isoParse;
 const idAccessor = (d) => d.id;
 //const timeAccessor = (d) => parseDate(d.time_abstracted);
-const timeAccessor = (d) => parseDate(d.timestamps);
+const timeAccessor = (d) => parseDate(d["time:timestamp"]);
 //const timeAccessor = (d) => parseFloat(d.timestamp_relative_seconds)  / 86400; // 86400 seconds in a day
-const actAccessor = (d) => d.activity;
-const caseAccessor = (d) => d.case; //parseInt(d.case)
-const resAccessor = (d) => d.resources;
+const actAccessor = (d) => d["concept:name:ranked"];
+//const actAccessor = (d) => d.resources;
+const caseAccessor = (d) => d["case:concept:name"]; //parseInt(d.case)
+const resAccessor = (d) => d["org:resource"];
 const nodes = (d) => d.nodes;
 const edges = (d) => d.edges;
 

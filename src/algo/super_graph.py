@@ -13,13 +13,13 @@ def build_super_graph(df: pandas.DataFrame):
     super_nodes = bidict()
     super_edges = []
     super_node_index = 0
-    for case in df["case"].unique().tolist():
+    for case in df["case:concept:name"].unique().tolist():
         prev_cluster = None
         current_cluster = None
         end_event = True
-        trace = df[df["case"] == case].iloc[::-1]
+        trace = df[df["case:concept:name"] == case].iloc[::-1]
         for index, event in trace.iterrows():
-            event_tuple = event_to_tuple(event.drop("case"))
+            event_tuple = event_to_tuple(event.drop("case:concept:name"))
             if event_tuple in super_nodes.values():
                 current_cluster = super_nodes.inv[event_tuple]
             else:
@@ -34,11 +34,11 @@ def build_super_graph(df: pandas.DataFrame):
                 if edge not in super_edges:
                     super_edges.append(edge)
             prev_cluster = current_cluster
-    print(super_nodes)
-    print(super_edges)
+    #print(super_nodes)
+    #print(super_edges)
 
     # Build the pandas Dataframe
-    columns.remove("case")
+    columns.remove("case:concept:name")
     rows = []
     case_id = 0
 
@@ -46,12 +46,12 @@ def build_super_graph(df: pandas.DataFrame):
         for node in (source, target):
             event_tuple = super_nodes[node]
             row_dict = dict(zip(columns, event_tuple))
-            row_dict["case"] = case_id
+            row_dict["case:concept:name"] = case_id
             rows.append(row_dict)
 
         case_id += 1
 
-    super_dataframe = pd.DataFrame(rows, columns=["case"] + columns)
+    super_dataframe = pd.DataFrame(rows, columns=["case:concept:name"] + columns)
     return super_dataframe
 
 

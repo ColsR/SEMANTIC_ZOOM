@@ -61,7 +61,8 @@ def simplifyLog(df, lifecycle_activities=False,
         if 'org:group' in df.columns:
             res_col = 'org:group'
         else:
-            keep_columns.remove(res_col)
+            pass
+            #keep_columns.remove(res_col)
     # create new activities with transitions, if applicable
     if (lifecycle_activities == True and
         lifecycle_col in df.columns):
@@ -85,7 +86,7 @@ def simplifyLog(df, lifecycle_activities=False,
         df = pm4py.filter_variants_top_k(df, filter_variants_k).copy()
 
     # keep only certain columns
-    df = df.filter(keep_columns)
+    #df = df.filter(keep_columns)
     return df
 
 def create_quantile_dict_from_grouped_dataframe(
@@ -140,7 +141,7 @@ def rename_cols_for_d3csv(
         act_col = 'concept:name', resources_col = 'org:resource', time_abstacted_col = 'time:timestamp_abstracted'):
     """Creates a dataframe with new column names for D3.js."""
 
-    print(df.columns)
+    #print(df.columns)
     if 'concept:name:ranked' in df.columns:
         act_col = 'concept:name:ranked'
 

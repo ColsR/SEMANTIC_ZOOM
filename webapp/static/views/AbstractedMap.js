@@ -7,14 +7,12 @@ import {defineLinkBezier, defineLinkVertical} from "../vizmodules/linkCalculator
 import {drawAxis} from "../components/axes.mjs";
 import {CONTOURGRAPH} from "../charts/contourGraph.mjs";
 import {renderInstanceGraph} from "../charts/instanceGraph.mjs";
-import {getAccessor} from "../utils/accessorMapper.mjs";
 
 
-export function ABSTRACTEDMAP(csvdata, x_accessor_name="time", y_accessor_name="activity") {
+export function ABSTRACTEDMAP(csvdata, x_accessor_name="time", y_accessor=actAccessor) {
     console.info("Drawing Test View");
 
     let x_accessor = timeAccessor;
-    let y_accessor = getAccessor(y_accessor_name);
     // Your test view drawing code here
     let currentContourBandwidth = 60;
     let currentContourThreshold = 3;
