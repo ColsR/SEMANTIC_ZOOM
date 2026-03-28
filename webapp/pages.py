@@ -33,7 +33,7 @@ from pathlib import Path
 from src.algo.super_graph import build_super_graph
 # from src.analysis.attribute_extractor import AttributeExtractor
 import src.analysis.attribute_extractor as attribute_extractor
-from src.clustering import general_clusterer
+from src.clustering import general_clusterer, numerical_clusterer
 from src.clustering.specific_clusterer import EXCLUDING_FUNCTIONS
 from src.utils.data_exporting import export_event_log, export_event_log_custom
 from src.utils.data_importing import load_event_log_from_tempfile
@@ -97,6 +97,8 @@ def upload_data():
             attribute_extractor.write_to_file()
             print(f"Extracted trace attributes: {attribute_extractor.trace_attributes}")
             print(f"Extracted event attributes: {attribute_extractor.event_attributes}")
+            df = load_event_log_from_tempfile(f"{FILEPATH}/persistent_log.xes")
+            numerical_clusterer.build_abstractions(df)
             general_clusterer.get_abstractions() # build_abstractions
             # Clean up temporary file
             os.remove(tmp_path)

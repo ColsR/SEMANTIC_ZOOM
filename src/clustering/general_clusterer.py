@@ -4,7 +4,8 @@ import pandas as pd
 import pm4py
 
 from src.analysis import attribute_extractor
-from src.clustering import time_clusterer, activity_clusterer, resource_clusterer, instance_clusterer
+from src.clustering import time_clusterer, activity_clusterer, resource_clusterer, instance_clusterer, \
+    numerical_clusterer
 
 ABSTRACTION_FUNCTIONS = None
 FLAT_ABSTRACTION_FUNCTIONS = None
@@ -46,6 +47,9 @@ def build_abstractions():
             case attribute_extractor.ATTRIBUTE_TYPES.RESOURCE:
                 abstraction_functions[f"resource_{col_name}"] = resource_clusterer.get_all(col_name)
                 print({f"resource_{col_name}" : resource_clusterer.get_all(col_name)})
+            case attribute_extractor.ATTRIBUTE_TYPES.NUMERICAL:
+                abstraction_functions[f"numerical_{col_name}"] = numerical_clusterer.get_all(col_name)
+                print({f"numerical_{col_name}": numerical_clusterer.get_all(col_name)})
             case _:
                 abstraction_functions[f"misc{col_name}"] = instance_clusterer.get_all(col_name)
                 print("Not supported yet")
