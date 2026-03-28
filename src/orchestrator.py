@@ -50,9 +50,9 @@ def process_log_for_d3js_abstractions(df, abstractions):
     df_proc, _ = global_ranking_of_eventdata(df_proc)
 
     # Apply abstractions
-    for (column, abstraction_fct) in abstractions:
-        print(f"Apply Abstraction {abstraction_fct} on column {column}")
-        df_proc = rename_abstraction(df_proc, column, abstraction_fct)
+    for (column, abstraction_obj) in abstractions:
+        print(f"Apply Abstraction {abstraction_obj} on column {column}")
+        df_proc = rename_abstraction(df_proc, column, abstraction_obj.apply_abstraction)
 
     print(df_proc.head())
     #df_proc = rename_cols_for_d3csv(df_proc)

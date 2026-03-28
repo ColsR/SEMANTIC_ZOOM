@@ -1,4 +1,5 @@
 from src.clustering import instance_clusterer
+from src.clustering.abstract_clusterer import AbstractClusterer
 from src.clustering.time_clusterer import get_all
 
 
@@ -31,8 +32,15 @@ def abstract_activity2(activity):
         case _:
             return activity
 
+
+class ActivityClusterer(AbstractClusterer):
+
+    def __init__(self, col_name, abstraction):
+        super().__init__(col_name)
+        self.abstraction_function = abstraction
+
 def get_all(col_name):
     return {
-        "activity_abstracted": (col_name, instance_clusterer.abstract_instance_complete),
-        "activity_not_abstracted": (col_name, instance_clusterer.abstract_instance),
+        "activity_abstracted": (col_name, ActivityClusterer(col_name, instance_clusterer.abstract_instance_complete)),
+        "activity_not_abstracted": (col_name, ActivityClusterer(col_name, instance_clusterer.abstract_instance)),
     }
