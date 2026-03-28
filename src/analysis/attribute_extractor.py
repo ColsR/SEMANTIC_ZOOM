@@ -16,6 +16,7 @@ class ATTRIBUTE_TYPES(Enum):
     ACTIVITY = "activity"
     RESOURCE = "resource"
     STRING = "string"
+    NUMERICAL = "numerical"
 
 
 trace_attributes = set()
@@ -47,8 +48,11 @@ def extract_attribute_type_mapping():
                 event_attribute_type_mapping.update({attr: ATTRIBUTE_TYPES.RESOURCE})
             case "concept:name":
                 event_attribute_type_mapping.update({attr: ATTRIBUTE_TYPES.ACTIVITY})
+            case "Costs":
+                event_attribute_type_mapping.update({attr: ATTRIBUTE_TYPES.NUMERICAL})
             case _:
                 event_attribute_type_mapping.update({attr: ATTRIBUTE_TYPES.STRING})
+
 
 
 def write_to_file():
