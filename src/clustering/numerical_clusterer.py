@@ -4,8 +4,30 @@ import pandas as pd
 
 from src.analysis import attribute_extractor
 from src.clustering import instance_clusterer
+from src.clustering.abstract_clusterer import AbstractClusterer
+from src.clustering.instance_clusterer import InstanceClusterer
 
 splits = {}
+
+
+class NumericalClusterer(AbstractClusterer):
+
+    def __init__(self, col_name, num_classes):
+        super().__init__(col_name)
+        global splits
+        col_splits = splits.get(col_name, {})
+        bounds = col_splits.get(num_classes, [])
+        self.bounds = bounds
+
+    def apply_abstraction(self, number):
+        for split in self.bounds:
+            try:
+                number = float(number)
+                if split >= number:
+                    return split
+            except ValueError:
+                print("number not to float castable")
+        raise ValueError(f"Number {number} is greater than all splits {self.bounds}")
 
 
 def build_abstractions(df):
@@ -43,36 +65,13 @@ def get_splitting(df, col_name, num_classes):
     print(f"splits {splits}")
     return bounds
 
-
-def build_splitting_function(col_name, num_classes):
-    global splits
-    col_splits = splits.get(col_name, {})
-    bounds = col_splits.get(num_classes, [])
-
-    return lambda x: apply_splitting(x, bounds)
-
-
-def apply_splitting(number, splitting):
-    for split in splitting:
-        try:
-            number = float(number)
-            if split >= number:
-                return split
-        except ValueError:
-            print("number not to float castable")
-    raise ValueError(f"Number {number} is greater than all splits {splitting}")
-
-
-def numerical_abstracted(number):
-    return "*"
-
 def get_all(col_name):
     return {
-        "numerical_abstracted": (col_name, numerical_abstracted),
-        f"numerical_2_classes{col_name}": (col_name, build_splitting_function(col_name, 2)),
-        f"numerical_4_classes{col_name}": (col_name, build_splitting_function(col_name, 4)),
-        f"numerical_4_classes{col_name}": (col_name, build_splitting_function(col_name, 8)),
-        "numerical_not_abstracted": (col_name, instance_clusterer.abstract_instance),
+        "numerical_abstracted": (col_name, InstanceClusterer(col_name,instance_clusterer.abstract_instance_complete)),
+        f"numerical_2_classes{col_name}": (col_name, NumericalClusterer(col_name, 2)),
+        f"numerical_4_classes{col_name}": (col_name, NumericalClusterer(col_name, 4)),
+        f"numerical_8_classes{col_name}": (col_name, NumericalClusterer(col_name, 8)),
+        "numerical_not_abstracted": (col_name, InstanceClusterer(col_name, instance_clusterer.abstract_instance)),
     }
 
 
