@@ -9,10 +9,9 @@ import {CONTOURGRAPH} from "../charts/contourGraph.mjs";
 import {renderInstanceGraph} from "../charts/instanceGraph.mjs";
 
 
-export function ABSTRACTEDMAP(csvdata, x_accessor_name="time", y_accessor=actAccessor) {
+export function ABSTRACTEDMAP(csvdata, x_accessor=timeAccessor, y_accessor=actAccessor) {
     console.info("Drawing Test View");
 
-    let x_accessor = timeAccessor;
     // Your test view drawing code here
     let currentContourBandwidth = 60;
     let currentContourThreshold = 3;
@@ -20,15 +19,21 @@ export function ABSTRACTEDMAP(csvdata, x_accessor_name="time", y_accessor=actAcc
 
     console.log("PARSING:" + parseDate("2010-12-30T14:32:00"));
 
-    const data = convertLogtoGraph(csvdata, caseAccessor, timeAccessor, y_accessor, idAccessor);
+    const data = convertLogtoGraph(csvdata, caseAccessor, x_accessor, y_accessor, idAccessor);
     console.log("DATA is:" + data);
     console.log("Nodes are:" + nodes(data));
 
     let activities = getUniqueValues(nodes(data), actAccessor);
-    let y_values = getUniqueValues(nodes(data), y_accessor);
-    //const xScale = SCALE.linear(d3.extent(nodes(data), timeAccessor), dimensions, { vertical: false });
+    let y_values = getUniqueValues(nodes(data), y_accessor, false);
     console.log("Extent of dates:", d3.extent(nodes(data), timeAccessor));
-    const xScale = SCALE.timeUTC(d3.extent(nodes(data), timeAccessor), dimensions, { vertical: false });
+    let xScale;
+    if (x_accessor.type === "time") {
+        console.log("Using time scale for x-axis");
+        xScale = SCALE.timeUTC(d3.extent(nodes(data), x_accessor), dimensions, { vertical: false });
+    } else {
+        console.log("Using categorical scale for x-axis");
+        xScale = SCALE.categories(getUniqueValues(nodes(data), x_accessor, false), dimensions, { vertical: true });
+    }
     const yScale = SCALE.categories(y_values, dimensions);
 
     const svg = d3.select('#chart')
@@ -60,25 +65,29 @@ export function ABSTRACTEDMAP(csvdata, x_accessor_name="time", y_accessor=actAcc
         labelDistance: -10,
         });
     */
+    const xTickFormat = x_accessor.type === "time"
+        ? d3.timeFormat("%Y-%m-%d %H:%M")
+        : (d) => `${d}`;
+
     drawAxis(ctr, xScale, 'bottom', dimensions, {
     className: 'x-axis',
     axisLabel: 'Time',
     labelDistance: -10,
-    tickFormat: d3.timeFormat("%Y-%m-%d %H:%M"),
+    tickFormat: xTickFormat,
     tickRotationDegree: 90,
     });
     // Draw y-axis
     drawAxis(ctr, yScale, 'left', dimensions, {
         className: 'y-axis',
         axisLabel: 'Activities',
-        ticks: d3.max(nodes(data), caseAccessor),
+        ticks: d3.max(nodes(data), x_accessor),
         tickPadding: 15,
         removeDomain: true,      // remove the y-axis line domain
         opacity: opacityLevelYAxis
     });
 
 
-    renderInstanceGraph(data, linkInstance, ctr, timeAccessor, xScale, y_accessor, yScale);
+    renderInstanceGraph(data, linkInstance, ctr, x_accessor, xScale, y_accessor, yScale);
     console.log("end")
 
 }

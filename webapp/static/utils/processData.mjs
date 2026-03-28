@@ -61,8 +61,12 @@ function deriveDFRelations(d, groupBy, xAccessor, yAccessor, idAccessor){
     return dirfol;
 };
 
-function getUniqueValues(d, accessor) {
-    return [...new Set(d.map(accessor))].sort().reverse();
+function getUniqueValues(d, accessor, reverse = true) {
+    if (reverse) {
+        return [...new Set(d.map(accessor))].sort().reverse();
+    } else {
+        return [...new Set(d.map(accessor))].sort();
+    }
 };
 
 function sortStringArrayByStartNumber (arr, descending = false) {

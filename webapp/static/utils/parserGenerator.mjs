@@ -6,13 +6,16 @@ const buildAccessors = (schema) => {
 
   for (const [key, type] of Object.entries(schema.eventAttributes)) {
     console.log(`Building accessor for key: ${key}, type: ${type}`);
-    if (type === "date") {
-      accessors[key] = (d) => parseDate(d[key]);
+    let fn;
+    if (type === "time") {
+      fn = (d) => parseDate(d[key]);
     } else if (type === "number") {
-      accessors[key] = (d) => +d[key];
+      fn = (d) => +d[key];
     } else {
-      accessors[key] = (d) => d[key];
+      fn = (d) => d[key];
     }
+    fn.type = type;
+    accessors[key] = fn;
   }
 
   return accessors;
