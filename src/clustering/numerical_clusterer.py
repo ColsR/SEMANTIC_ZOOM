@@ -31,7 +31,7 @@ class NumericalClusterer(AbstractClusterer):
 
 
 def build_abstractions(df):
-    for col_name in [key for key,value in attribute_extractor.event_attribute_type_mapping.items() if value == attribute_extractor.ATTRIBUTE_TYPES.NUMERICAL]:
+    for col_name in [key for key,value in attribute_extractor.event_attribute_type_mapping.items() if value == attribute_extractor.ATTRIBUTE_TYPES.NUMERICAL and key in df.columns.values.tolist()]:
         get_splitting(df, col_name, 2)
         get_splitting(df, col_name, 4)
         get_splitting(df, col_name, 8)

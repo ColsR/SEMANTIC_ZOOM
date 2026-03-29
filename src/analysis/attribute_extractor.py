@@ -13,7 +13,7 @@ sys.path.append(str(project_root))
 FILEPATH = project_root / 'data' / 'working_data'
 
 
-class ATTRIBUTE_TYPES(Enum):
+class ATTRIBUTE_TYPES(str, Enum):
     TIME = "time"
     ACTIVITY = "activity"
     RESOURCE = "resource"
@@ -95,6 +95,11 @@ def write_to_file():
             outfile,
             indent=2
         )
+
+
+def update_attribute(attribute, attribute_type):
+    event_attribute_type_mapping.update({attribute: ATTRIBUTE_TYPES(attribute_type)})
+    write_to_file()
 
 
 """
