@@ -27,7 +27,7 @@ class NumericalClusterer(AbstractClusterer):
                     return split
             except ValueError:
                 print("number not to float castable")
-        raise ValueError(f"Number {number} is greater than all splits {self.bounds}")
+        print(f"Number {number} is greater than all splits {self.bounds}")
 
 
 def build_abstractions(df):
