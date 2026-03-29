@@ -143,12 +143,13 @@ def get_abstracted_data():
 
         # Testing
         #attribute_extractor = AttributeExtractor(f"{FILEPATH}/volatile_working_xes.xes")
-
+        """"
         attribute_extractor.extract_attributes(f"{FILEPATH}/volatile_working_xes.xes")
         attribute_extractor.extract_attribute_type_mapping()
         attribute_extractor.write_to_file()
         print(f"Extracted trace attributes testing: {attribute_extractor.trace_attributes}")
         print(f"Extracted event attributes testing: {attribute_extractor.event_attributes}")
+        """
         general_clusterer.get_abstractions() # build_abstractions
 
     except Exception as e:
@@ -175,3 +176,23 @@ def get_available_attributes():
     with open(f"{FILEPATH}/attributes.json", mode='r') as fp:
         attributes = json.load(fp)
         return jsonify(attributes)
+
+@bp.route("/api/attribute_types")
+def get_attribute_types():
+    return jsonify([attr_types for attr_types in attribute_extractor.ATTRIBUTE_TYPES])
+
+
+@bp.route("/api/attribute_types", methods=['POST'])
+def post_attribute_types():
+    data = request.get_json()
+    changing_attribute = data["attribute"]
+    new_attribute_type = data["type"]
+    print(f"Changing attribute types for {changing_attribute} to {new_attribute_type}")
+    attribute_extractor.update_attribute(changing_attribute, new_attribute_type)
+    general_clusterer.reset_abstractions()
+    df = load_event_log_from_tempfile(f"{FILEPATH}/persistent_log.xes")
+    numerical_clusterer.build_abstractions(df)
+    general_clusterer.get_abstractions()
+    return jsonify({"success": "OK"})
+
+
