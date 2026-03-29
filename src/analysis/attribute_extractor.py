@@ -1,5 +1,7 @@
 import json
 import sys
+from collections import defaultdict
+from datetime import datetime
 from pathlib import Path
 
 from pm4py.objects.log.importer.xes import importer as xes_importer
@@ -22,6 +24,9 @@ class ATTRIBUTE_TYPES(Enum):
 trace_attributes = set()
 event_attributes = set()
 event_attribute_type_mapping = dict()
+trace_attributes_types = defaultdict(set)
+event_attributes_types = defaultdict(set)
+
 
 
 def load_event_log(file_path):
@@ -35,12 +40,20 @@ def extract_attributes(file_path):
     log = load_event_log(file_path)
     for trace in log:
         trace_attributes.update(trace.attributes.keys())
+        for trace_key, trace_value in trace.attributes.items():
+            trace_attributes_types[trace_key].add(type(trace_value).__name__)
         for event in trace:
             event_attributes.update(event.keys())
+            for key, value in event.items():
+                event_attributes_types[key].add(type(value).__name__)
+
+    print(f"event_attributes_types: {event_attributes_types}")
+    print(f"trace_attributes_types: {trace_attributes_types}")
 
 
 def extract_attribute_type_mapping():
-    for attr in event_attributes:
+    # Match based on attribute name
+    for attr in event_attributes_types.keys():
         match attr:
             case "time:timestamp":
                 event_attribute_type_mapping.update({attr: ATTRIBUTE_TYPES.TIME})
@@ -51,8 +64,26 @@ def extract_attribute_type_mapping():
             case "Costs":
                 event_attribute_type_mapping.update({attr: ATTRIBUTE_TYPES.NUMERICAL})
             case _:
-                event_attribute_type_mapping.update({attr: ATTRIBUTE_TYPES.STRING})
+                pass
 
+    # Match based on attribute type
+    for attr, attr_type_set in event_attributes_types.items():
+        if attr not in event_attribute_type_mapping.keys():
+            print(f"Matching attribute {attr} based on type. Types: {attr_type_set}")
+            selected_attr_type = next(iter(attr_type_set))
+            if len(attr_type_set) > 1:
+                print(f"WARN: {attr} has more than one type. Types: {attr_type_set}. SETTING to {selected_attr_type}.")
+            match selected_attr_type:
+                case datetime.__name__:
+                    event_attribute_type_mapping.update({attr: ATTRIBUTE_TYPES.TIME})
+                case float.__name__:
+                    event_attribute_type_mapping.update({attr: ATTRIBUTE_TYPES.NUMERICAL})
+                case int.__name__:
+                    event_attribute_type_mapping.update({attr: ATTRIBUTE_TYPES.NUMERICAL})
+                case str.__name__:
+                    event_attribute_type_mapping.update({attr: ATTRIBUTE_TYPES.STRING})
+                case _:
+                    event_attribute_type_mapping.update({attr: ATTRIBUTE_TYPES.STRING})
 
 
 def write_to_file():
