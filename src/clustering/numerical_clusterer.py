@@ -67,11 +67,11 @@ def get_splitting(df, col_name, num_classes):
 
 def get_all(col_name):
     return {
-        "numerical_abstracted": (col_name, InstanceClusterer(col_name,instance_clusterer.abstract_instance_complete)),
+        f"numerical_{col_name}_abstracted": (col_name, InstanceClusterer(col_name,instance_clusterer.abstract_instance_complete)),
         f"numerical_2_classes{col_name}": (col_name, NumericalClusterer(col_name, 2)),
         f"numerical_4_classes{col_name}": (col_name, NumericalClusterer(col_name, 4)),
         f"numerical_8_classes{col_name}": (col_name, NumericalClusterer(col_name, 8)),
-        "numerical_not_abstracted": (col_name, InstanceClusterer(col_name, instance_clusterer.abstract_instance)),
+        f"numerical_{col_name}_not_abstracted": (col_name, InstanceClusterer(col_name, instance_clusterer.abstract_instance)),
     }
 
 
