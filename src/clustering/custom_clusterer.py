@@ -20,12 +20,6 @@ def load_custom_abstractions(config_path):
     with open(f"{config_path}/custom_abstractions.json", mode='r') as fp:
         custom_abstractions = json.load(fp)
         return custom_abstractions
-        for custom_abstraction in custom_abstractions:
-            col_name = custom_abstraction["col_name"]
-            abstractions = custom_abstraction["abstractions"]
-            print(col_name)
-            print(abstractions)
-            # man muss die entsprechende
 
 def get_all(_):
     project_root = Path(__file__).resolve().parent.parent.parent

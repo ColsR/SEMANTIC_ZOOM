@@ -18,6 +18,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 Website: https://hu-berlin.de/rubensson
 E-Mail: {firstname.lastname}@hu-berlin.de
 '''
+import logging
 
 # Data processing and transformation methods
 
@@ -25,6 +26,8 @@ import numpy as np
 import math
 import pandas as pd
 import pm4py
+
+logger = logging.getLogger(__name__)
 
 
 def relativeTimestamps(df):
@@ -40,9 +43,9 @@ def relativeTimestamps(df):
 
 
 def timestamp_to_seconds(df):
-    print("converting timestamps to seconds...")
+    logger.debug("converting timestamps to seconds...")
     df["time_timestamp_seconds"] = df["time:timestamp:relative"].apply(lambda t: t.total_seconds()).astype(int)
-    print("conversion complete.")
+    logger.debug("conversion complete.")
     return df
 
 def simplifyLog(df, lifecycle_activities=False,
@@ -69,9 +72,9 @@ def simplifyLog(df, lifecycle_activities=False,
         if len(df[lifecycle_col].unique()) > 1:
             df[act_col] = df[act_col] + '-' + df[lifecycle_col]
         else:
-            print('Message: No transition-activity were be created. Only one type of lifecycle transition in log.')
+            logger.debug('Message: No transition-activity were be created. Only one type of lifecycle transition in log.')
     else:
-        print('Message: No transition-activity were be created. No transition column.')
+        logger.debug('Message: No transition-activity were be created. No transition column.')
 
     # LOG FILTERING
     # keep only k amount cases in the log
@@ -172,5 +175,5 @@ def convert_timecols_to_string(df):
             df_str[col] = df_str[col].dt.total_seconds().astype(str)
             convert_columns.append(col)
     #df_str[convert_columns] = df_str[convert_columns].astype(str)
-    print("Converted columns to string:", convert_columns)
+    logger.debug("Converted columns to string:", convert_columns)
     return df_str

@@ -18,10 +18,13 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 Website: https://hu-berlin.de/rubensson
 E-Mail: {firstname.lastname}@hu-berlin.de
 '''
+import logging
 
 # Ranking algorithms for event data
 import pm4py
 from src.utils.data_processing import create_dict_from_integer, filter_tuplekeys_by_prefix, sort_dict_by_values, switch_item_key_in_dictionary
+
+logger = logging.getLogger(__name__)
 
 def global_ranking_of_eventdata(
         df, method = "df_realtime_mean", 
@@ -75,7 +78,7 @@ def global_ranking_method_df_relativetime(
     # error check for missing activities
     missing_activities = all_activities - set(activity_group_list)
     if missing_activities:
-        print("Warning: The following activities were expected but missing:", missing_activities)
+        logger.warning("Warning: The following activities were expected but missing:", missing_activities)
 
     # Sort activities based on their type and timestamp
     start_act_sorted = [a for a in activity_group_list if a in start_activities]
