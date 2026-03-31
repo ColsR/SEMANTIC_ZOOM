@@ -18,12 +18,16 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 Website: https://hu-berlin.de/rubensson
 E-Mail: {firstname.lastname}@hu-berlin.de
 '''
+import logging
+
 from src.clustering.general_clusterer import rename_abstraction
 from src.clustering.specific_clusterer import rename_exclusion
 from src.utils.data_processing import simplifyLog, relativeTimestamps
 from src.algo.global_ranking import global_ranking_of_eventdata
 from src.utils.data_processing import rename_cols_for_d3csv, convert_timecols_to_string
 import src.clustering.time_clusterer as time_clusterer
+
+logger = logging.getLogger(__name__)
 
 def process_log_for_d3js(df):
     """
@@ -51,13 +55,13 @@ def process_log_for_d3js_abstractions(df, abstractions):
 
     # Apply abstractions
     for (column, abstraction_obj) in abstractions:
-        print(f"Apply Abstraction {abstraction_obj} on column {column}")
+        logger.debug(f"Apply Abstraction {abstraction_obj} on column {column}")
         df_proc = rename_abstraction(df_proc, column, abstraction_obj.col_name, abstraction_obj.apply_abstraction)
 
-    print(df_proc.head())
+    logger.debug(df_proc.head())
     #df_proc = rename_cols_for_d3csv(df_proc)
-    print("nach renaming")
-    print(df_proc.head())
+    logger.debug("nach renaming")
+    logger.debug(df_proc.head())
     df_proc = convert_timecols_to_string(df_proc) # Convert Timedelta to string (JSON cannot handle Timedelta or Datetime)
     df_proc = df_proc.fillna("nan") # In case some values are NaN, replace them with "nan" string for JSON compatibility
     return df_proc

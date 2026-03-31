@@ -1,3 +1,4 @@
+import logging
 import math
 
 import pandas as pd
@@ -6,6 +7,8 @@ from src.analysis import attribute_extractor
 from src.clustering import instance_clusterer
 from src.clustering.abstract_clusterer import AbstractClusterer
 from src.clustering.instance_clusterer import InstanceClusterer
+
+logger = logging.getLogger(__name__)
 
 splits = {}
 
@@ -20,13 +23,14 @@ class NumericalClusterer(AbstractClusterer):
         self.bounds = bounds
 
     def apply_abstraction(self, number):
-        for split in self.bounds:
-            try:
-                number = float(number)
-                if split >= number:
-                    return split
-            except ValueError:
-                print("number not to float castable")
+        try:
+            number = float(number)
+        except ValueError:
+            logger.debug("number not to float castable")
+        for split in self.bounds: # TODO change to List?
+            if split >= number:
+                return split
+
         return None
         #print(f"Number {number} is greater than all splits {self.bounds}")
 
@@ -63,7 +67,7 @@ def get_splitting(df, col_name, num_classes):
     current_splits = splits.get(col_name, {})
     current_splits[num_classes] = bounds
     splits[col_name] = current_splits
-    print(f"splits {splits}")
+    logger.debug(f"splits {splits}")
     return bounds
 
 def get_all(col_name):

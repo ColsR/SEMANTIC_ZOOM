@@ -29,6 +29,7 @@ import pandas as pd
 import tempfile
 from flask import Blueprint, render_template, request, jsonify
 from pathlib import Path
+import logging
 
 from src.algo.super_graph import build_super_graph
 # from src.analysis.attribute_extractor import AttributeExtractor
@@ -42,6 +43,13 @@ from src.orchestrator import process_log_for_d3js, process_log_for_d3js_abstract
 # App directory
 project_root = Path(__file__).resolve().parent.parent
 sys.path.append(str(project_root))
+log_level = os.getenv("LOG_LEVEL", "INFO").upper()
+logging.basicConfig(
+    level=getattr(logging, log_level),
+    force=True
+)
+
+logger = logging.getLogger(__name__)
 
 bp = Blueprint("pages", __name__)
 
@@ -95,8 +103,8 @@ def upload_data():
             attribute_extractor.extract_attributes(tmp_path)
             attribute_extractor.extract_attribute_type_mapping()
             attribute_extractor.write_to_file()
-            print(f"Extracted trace attributes: {attribute_extractor.trace_attributes}")
-            print(f"Extracted event attributes: {attribute_extractor.event_attributes}")
+            logger.info(f"Extracted trace attributes: {attribute_extractor.trace_attributes}")
+            logger.info(f"Extracted event attributes: {attribute_extractor.event_attributes}")
             df = load_event_log_from_tempfile(f"{FILEPATH}/persistent_log.xes")
             numerical_clusterer.build_abstractions(df)
             general_clusterer.get_abstractions() # build_abstractions
@@ -112,28 +120,28 @@ def upload_data():
 def get_abstracted_data():
     data = request.get_json()
     requested_abstractions = data.get("abstractions")
-    print(f"requested abstractions: {requested_abstractions}")
-    print(f"FLAT Abstractions loading from {general_clusterer.get_abstractions()}") # build_abstractions
+    logger.info(f"requested abstractions: {requested_abstractions}")
+    # print(f"FLAT Abstractions loading from {general_clusterer.get_abstractions()}") # build_abstractions
     ABSTRACTION_FUNCTIONS, FLAT_ABSTRACTION_FUNCTIONS = general_clusterer.get_abstractions() # build_abstractions
     abstractions = [FLAT_ABSTRACTION_FUNCTIONS[abstraction] for abstraction in requested_abstractions if abstraction in FLAT_ABSTRACTION_FUNCTIONS.keys()]
-    print(f"abstractions: {abstractions}")
+    logger.info(f"abstractions: {abstractions}")
     requested_exclusions = data.get("exclusions")
-    print(f"requested exclusions: {requested_exclusions}")
+    logger.info(f"requested exclusions: {requested_exclusions}")
     exclusions = [EXCLUDING_FUNCTIONS[exclusion] for exclusion in requested_exclusions if
                     exclusion in EXCLUDING_FUNCTIONS]
 
     # Load the non-abstracted log from the temporary file created during upload
     df = load_event_log_from_tempfile(f"{FILEPATH}/persistent_log.xes")
-    print("Loaded persistent log ")
-    print(len(df))
-    print(df.head())
+    logger.debug("Loaded persistent log ")
+    logger.debug(len(df))
+    logger.debug(df.head())
     if len(exclusions) > 0:
-        print("exclusion branch")
+        logger.debug("exclusion branch")
         df = process_log_for_d3js_exclusions(df, exclusions)
     else:
-        print(f"abstractions branch with {abstractions}")
+        logger.debug(f"abstractions branch with {abstractions}")
         df = process_log_for_d3js_abstractions(df, abstractions)
-    print("Processed log for d3js with abstractions")
+    logger.info("Processed log for d3js with abstractions")
     df.head()
     # export the abstracted log to a csv and a xes file
     df_copy =df.copy()
@@ -153,7 +161,7 @@ def get_abstracted_data():
         general_clusterer.get_abstractions() # build_abstractions
 
     except Exception as e:
-        print(f"Error exporting event log: {e}")
+        logger.error(f"Error exporting event log: {e}")
 
     # Build the super nodes and super edges
     super_df = build_super_graph(df)
@@ -163,7 +171,7 @@ def get_abstracted_data():
 @bp.route("/api/available_abstractions")
 def get_available_abstractions():
     ABSTRACTION_FUNCTIONS, FLAT_ABSTRACTION_FUNCTIONS = general_clusterer.get_abstractions() # build_abstractions
-    print(f"Available abstractions {ABSTRACTION_FUNCTIONS}")
+    logger.info(f"Available abstractions {ABSTRACTION_FUNCTIONS}")
     abstraction_keys = {attr : list(ABSTRACTION_FUNCTIONS[attr].keys()) for attr in ABSTRACTION_FUNCTIONS.keys()}
     return jsonify(abstraction_keys)
 
@@ -187,7 +195,7 @@ def post_attribute_types():
     data = request.get_json()
     changing_attribute = data["attribute"]
     new_attribute_type = data["type"]
-    print(f"Changing attribute types for {changing_attribute} to {new_attribute_type}")
+    logger.info(f"Changing attribute types for {changing_attribute} to {new_attribute_type}")
     attribute_extractor.update_attribute(changing_attribute, new_attribute_type)
     general_clusterer.reset_abstractions()
     df = load_event_log_from_tempfile(f"{FILEPATH}/persistent_log.xes")

@@ -18,12 +18,15 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 Website: https://hu-berlin.de/rubensson
 E-Mail: {firstname.lastname}@hu-berlin.de
 '''
+import logging
 
 # Load and preprocess event data
 # app/backend/data_loader.py
 import pandas as pd
 import pm4py
 from pathlib import Path
+
+logger = logging.getLogger(__name__)
 
 def export_event_log(df, filename: str, foldername="processed_event_data") -> pd.DataFrame:
     """Exports a DataFrame to an XES file in the specified folder."""
@@ -33,11 +36,11 @@ def export_event_log(df, filename: str, foldername="processed_event_data") -> pd
     else:
         raise ValueError("'Filename' must be an .xes file and\n\
                          be in the folder 'data/processed_event_data'.")
-    return print("export complete.")
+    return logger.info("export complete.")
 
 def export_event_log_custom(df, file_path):
-    print("Exporting event log...")
-    print(df)
+    logger.info("Exporting event log...")
+    logger.debug(df)
     """Exports a DataFrame to an specified XES file"""
     if file_path.endswith(".xes"):
         df["time:timestamp"] = pd.to_datetime(df["time:timestamp"])
@@ -45,8 +48,8 @@ def export_event_log_custom(df, file_path):
         df.drop(columns=["time:timestamp:casestart", "time:timestamp:relative", "timestamp_relative_seconds", "time:relative:seconds:log", "ranks", "activity", "concept:name:ranked", "time:relative:seconds"], inplace=True, errors="ignore")
         #df.rename(columns={"timestamps": "time:timestamp"}, inplace=True)
         #df = df.rename(columns={"timestamps": "time:timestamp"})
-        print("Exporting event log...")
-        print(df)
+        logger.debug("Exporting xes event log...")
+        logger.debug(df)
         log = pm4py.convert_to_event_log(
             df,
             case_id_key="case:concept:name",
@@ -57,4 +60,4 @@ def export_event_log_custom(df, file_path):
     else:
         raise ValueError("'Filename' must be an .xes file and\n\
                          be in the folder 'data/processed_event_data'.")
-    return print("export complete.")
+    return logger.info("export complete.")

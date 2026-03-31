@@ -1,5 +1,6 @@
 import configparser
 import json
+import logging
 from pathlib import Path
 
 import pandas as pd
@@ -8,6 +9,8 @@ import pm4py
 from src.analysis import attribute_extractor
 from src.clustering import time_clusterer, activity_clusterer, resource_clusterer, instance_clusterer, \
     numerical_clusterer, custom_clusterer
+
+logger = logging.getLogger(__name__)
 
 ABSTRACTION_FUNCTIONS = None
 FLAT_ABSTRACTION_FUNCTIONS = None
@@ -18,7 +21,7 @@ def general_abstraction(df, column, abstraction):
 
 def rename_abstraction(df, target_column, source_column, abstraction):
     if source_column not in df.columns or target_column not in df.columns:
-        print("Cannot Apply abstraction because source or target column is not in dataframe")
+        logger.warning("Cannot Apply abstraction because source or target column is not in dataframe")
         return df
     df[target_column] = df[source_column].apply(lambda x: abstraction(x))
     return df
@@ -39,7 +42,7 @@ def reset_abstractions():
 def build_abstractions():
     abstraction_functions = {}
     attributes = attribute_extractor.event_attribute_type_mapping
-    print(f"attribute_mapping: {attributes}")
+    logger.info(f"attribute_mapping: {attributes}")
     custom_columns = set()
 
     # load custom abstractions
@@ -47,7 +50,7 @@ def build_abstractions():
     for col_name, clusterer in custom_cluster.items():
         custom_columns.add(col_name)
         abstraction_functions[f"custom{col_name}"] = clusterer
-        print({f"custom{col_name}": time_clusterer.get_all(col_name)})
+        logger.debug({f"custom{col_name}": time_clusterer.get_all(col_name)})
 
 
     for col_name, attribute_type in attributes.items():
@@ -55,24 +58,23 @@ def build_abstractions():
             match attribute_type:
                 case attribute_extractor.ATTRIBUTE_TYPES.TIME:
                     abstraction_functions[f"time_{col_name}"] = time_clusterer.get_all(col_name)
-                    print({f"time{col_name}" : time_clusterer.get_all(col_name)})
+                    logger.debug({f"time{col_name}" : time_clusterer.get_all(col_name)})
                 case attribute_extractor.ATTRIBUTE_TYPES.ACTIVITY:
                     abstraction_functions[f"activity_{col_name}"] = activity_clusterer.get_all(col_name)
-                    print({f"activity{col_name}" : activity_clusterer.get_all(col_name)})
+                    logger.debug({f"activity{col_name}" : activity_clusterer.get_all(col_name)})
                 case attribute_extractor.ATTRIBUTE_TYPES.RESOURCE:
                     abstraction_functions[f"resource{col_name}"] = resource_clusterer.get_all(col_name)
-                    print({f"resource{col_name}" : resource_clusterer.get_all(col_name)})
+                    logger.debug({f"resource{col_name}" : resource_clusterer.get_all(col_name)})
                 case attribute_extractor.ATTRIBUTE_TYPES.NUMERICAL:
                     abstraction_functions[f"numerical{col_name}"] = numerical_clusterer.get_all(col_name)
-                    print({f"numerical_{col_name}": numerical_clusterer.get_all(col_name)})
+                    logger.debug({f"numerical_{col_name}": numerical_clusterer.get_all(col_name)})
                 case _:
                     abstraction_functions[f"misc{col_name}"] = instance_clusterer.get_all(col_name)
-                    print("Not supported yet")
-                    print({f"misc{col_name}" : instance_clusterer.get_all(col_name)})
+                    logger.debug("Not supported yet")
+                    logger.debug({f"misc{col_name}" : instance_clusterer.get_all(col_name)})
 
     flat_abstraction_functions = {k: v for group in abstraction_functions.values() for k, v in group.items()}
-    print(f"Flat: {flat_abstraction_functions}")
-    print("T")
+    logger.debug(f"Flat: {flat_abstraction_functions}")
     return abstraction_functions, flat_abstraction_functions
 
 

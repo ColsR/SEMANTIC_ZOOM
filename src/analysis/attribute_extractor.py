@@ -1,4 +1,5 @@
 import json
+import logging
 import sys
 from collections import defaultdict
 from datetime import datetime
@@ -7,6 +8,7 @@ from pathlib import Path
 from pm4py.objects.log.importer.xes import importer as xes_importer
 from enum import Enum
 
+logger = logging.getLogger(__name__)
 
 project_root = Path(__file__).resolve().parent.parent.parent
 sys.path.append(str(project_root))
@@ -47,8 +49,8 @@ def extract_attributes(file_path):
             for key, value in event.items():
                 event_attributes_types[key].add(type(value).__name__)
 
-    print(f"event_attributes_types: {event_attributes_types}")
-    print(f"trace_attributes_types: {trace_attributes_types}")
+    logger.info(f"event_attributes_types: {event_attributes_types}")
+    logger.info(f"trace_attributes_types: {trace_attributes_types}")
 
 
 def extract_attribute_type_mapping():
@@ -69,10 +71,10 @@ def extract_attribute_type_mapping():
     # Match based on attribute type
     for attr, attr_type_set in event_attributes_types.items():
         if attr not in event_attribute_type_mapping.keys():
-            print(f"Matching attribute {attr} based on type. Types: {attr_type_set}")
+            logger.debug(f"Matching attribute {attr} based on type. Types: {attr_type_set}")
             selected_attr_type = next(iter(attr_type_set))
             if len(attr_type_set) > 1:
-                print(f"WARN: {attr} has more than one type. Types: {attr_type_set}. SETTING to {selected_attr_type}.")
+                logger.warning(f"{attr} has more than one type. Types: {attr_type_set}. SETTING to {selected_attr_type}.")
             match selected_attr_type:
                 case datetime.__name__:
                     event_attribute_type_mapping.update({attr: ATTRIBUTE_TYPES.TIME})
