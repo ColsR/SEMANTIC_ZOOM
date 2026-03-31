@@ -52,7 +52,7 @@ def process_log_for_d3js_abstractions(df, abstractions):
     # Apply abstractions
     for (column, abstraction_obj) in abstractions:
         print(f"Apply Abstraction {abstraction_obj} on column {column}")
-        df_proc = rename_abstraction(df_proc, column, abstraction_obj.apply_abstraction)
+        df_proc = rename_abstraction(df_proc, column, abstraction_obj.col_name, abstraction_obj.apply_abstraction)
 
     print(df_proc.head())
     #df_proc = rename_cols_for_d3csv(df_proc)

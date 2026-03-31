@@ -22,9 +22,11 @@ class TimeClusterer(AbstractClusterer):
         self.abstraction_function = abstraction
 
 
+def abstract_time_complete(timestamp):
+    timestamp = pd.Timestamp(0)
 
-
-
+def abstract_time_to_year(timestamp):
+    return timestamp.replace(month=1, day=1, hour=0, minute=0, second=0, microsecond=0)
 
 def abstract_time_to_month(timestamp):
     return timestamp.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
@@ -51,6 +53,8 @@ def abstract_time_to_second(timestamp):
 
 def get_all(col_name):
     return {
+            "time_abstracted" : (col_name, TimeClusterer(col_name, abstract_time_complete)),
+            "time_year" : (col_name, TimeClusterer(col_name, abstract_time_to_year)),
             "time_month": (col_name, TimeClusterer(col_name, abstract_time_to_month)),
             "time_week": (col_name, TimeClusterer(col_name, abstract_time_to_week)),
             "time_day": (col_name, TimeClusterer(col_name, abstract_time_to_day)),
