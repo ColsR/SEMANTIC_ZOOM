@@ -19,11 +19,11 @@ def general_abstraction(df, column, abstraction):
     df[column + '_abstracted'] = df[column].apply(lambda x: abstraction(x))
     return df
 
-def rename_abstraction(df, target_column, source_column, abstraction):
+def rename_abstraction(df, target_column, source_column, abstraction, mask):
     if source_column not in df.columns or target_column not in df.columns:
         logger.warning("Cannot Apply abstraction because source or target column is not in dataframe")
         return df
-    df[target_column] = df[source_column].apply(lambda x: abstraction(x))
+    df.loc[mask, target_column] = df.loc[mask, source_column].apply(lambda x : abstraction(x))
     return df
 
 def get_abstractions():

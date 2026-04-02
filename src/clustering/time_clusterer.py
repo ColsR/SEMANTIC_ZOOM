@@ -23,7 +23,7 @@ class TimeClusterer(AbstractClusterer):
 
 
 def abstract_time_complete(timestamp):
-    timestamp = pd.Timestamp(0)
+    return pd.Timestamp(0)
 
 def abstract_time_to_year(timestamp):
     return timestamp.replace(month=1, day=1, hour=0, minute=0, second=0, microsecond=0)

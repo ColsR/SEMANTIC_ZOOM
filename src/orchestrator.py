@@ -18,8 +18,12 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 Website: https://hu-berlin.de/rubensson
 E-Mail: {firstname.lastname}@hu-berlin.de
 '''
+import copy
+import json
 import logging
+from pathlib import Path
 
+from src.clustering import general_clusterer, specific_clusterer
 from src.clustering.general_clusterer import rename_abstraction
 from src.clustering.specific_clusterer import rename_exclusion
 from src.utils.data_processing import simplifyLog, relativeTimestamps
@@ -28,6 +32,9 @@ from src.utils.data_processing import rename_cols_for_d3csv, convert_timecols_to
 import src.clustering.time_clusterer as time_clusterer
 
 logger = logging.getLogger(__name__)
+
+project_root = Path(__file__).resolve().parent.parent
+FILEPATH =  project_root / "data" / "working_data"
 
 def process_log_for_d3js(df):
     """
@@ -53,10 +60,38 @@ def process_log_for_d3js_abstractions(df, abstractions):
     df_proc = relativeTimestamps(df_proc)
     df_proc, _ = global_ranking_of_eventdata(df_proc)
 
+
+    # TODO die masken müssen noch korrekt berechnet werden: über die Spalten: Standard als logische NOR Verkmüpfung, ggf. mal schauen wie man es mit dem Ranking macht. Ggf. muss man allen Abstraktionsmöglichkeiten noch ein Ranking mitgeben
+
+    standard_mask = [True] * len(df_proc)
+    for (column, abstraction_obj) in abstractions:
+        abstraction_obj.set_mask(standard_mask)
+
+    # Specific Zooming
+    # TODO pass as parameter not loaded from file
+    ABSTRACTION_FUNCTIONS, FLAT_ABSTRACTION_FUNCTIONS = general_clusterer.get_abstractions()  # build_abstractions
+    with open(f'{FILEPATH}/specific_zooms.json', 'r') as f:
+        specific_zoomings = json.load(f)
+        for specific_zooming in specific_zoomings:
+            sp_target_column = specific_zooming['target_column']
+            sp_source_column = specific_zooming['filter_column']
+            sp_filter_attribute = specific_zooming['filter_attribute']
+            sp_abstraction_function = specific_zooming['abstraction_function']
+            logger.info(f"Processing {sp_target_column} -> {sp_source_column} for {sp_filter_attribute} with {sp_abstraction_function}")
+            if (t_std_abstraction := FLAT_ABSTRACTION_FUNCTIONS.get(sp_abstraction_function)) is not None:
+                _, std_abstraction = t_std_abstraction
+                # TODO man könnte noch drüber nachdenken, ob man die Info auf welceh Spalte die Abstraktion ausgeführt werden soll nicht aus der json kommt, sondern aus der ursprünglichen Abstraktionsdefinition bzw. zumindest asserten und dann loggen wenn es nicht passt
+                sp_abstraction = copy.deepcopy(std_abstraction)
+                sp_mask = specific_clusterer.build_mask(df_proc, sp_source_column, sp_filter_attribute)
+                sp_abstraction.set_mask(sp_mask)
+                # ADD new abstraction.
+                abstractions.append((sp_target_column,sp_abstraction))
+
+
     # Apply abstractions
     for (column, abstraction_obj) in abstractions:
         logger.debug(f"Apply Abstraction {abstraction_obj} on column {column}")
-        df_proc = rename_abstraction(df_proc, column, abstraction_obj.col_name, abstraction_obj.apply_abstraction)
+        df_proc = rename_abstraction(df_proc, column, abstraction_obj.col_name, abstraction_obj.apply_abstraction, abstraction_obj.mask)
 
     logger.debug(df_proc.head())
     #df_proc = rename_cols_for_d3csv(df_proc)

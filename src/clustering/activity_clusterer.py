@@ -32,7 +32,6 @@ def abstract_activity2(activity):
         case _:
             return activity
 
-
 class ActivityClusterer(AbstractClusterer):
 
     def __init__(self, col_name, abstraction):
@@ -42,5 +41,6 @@ class ActivityClusterer(AbstractClusterer):
 def get_all(col_name):
     return {
         "activity_abstracted": (col_name, ActivityClusterer(col_name, instance_clusterer.abstract_instance_complete)),
+        "activity_bygroup": (col_name, ActivityClusterer("org:group", instance_clusterer.abstract_instance)),
         "activity_not_abstracted": (col_name, ActivityClusterer(col_name, instance_clusterer.abstract_instance)),
     }

@@ -32,9 +32,17 @@ export function ABSTRACTEDMAP(csvdata, x_accessor=timeAccessor, y_accessor=actAc
         xScale = SCALE.timeUTC(d3.extent(nodes(data), x_accessor), dimensions, { vertical: false });
     } else {
         console.log("Using categorical scale for x-axis");
-        xScale = SCALE.categories(getUniqueValues(nodes(data), x_accessor, false), dimensions, { vertical: true });
+        xScale = SCALE.categories(getUniqueValues(nodes(data), x_accessor, false), dimensions, { vertical: false });
     }
-    const yScale = SCALE.categories(y_values, dimensions);
+    let yScale;
+    if (y_accessor.type === "numerical") {
+        console.log("Using linear scale for y-axis, because of numerical type");
+        yScale = SCALE.categories(getUniqueValues(nodes(data), y_accessor, false), dimensions, {vertical: true});
+    } else {
+        console.log("Using categories scale for y-axis, as standard");
+        yScale = SCALE.categories(y_values, dimensions);
+    }
+
 
     const svg = d3.select('#chart')
         .append("svg")
