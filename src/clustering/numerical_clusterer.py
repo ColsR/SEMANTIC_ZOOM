@@ -5,8 +5,9 @@ import pandas as pd
 
 from src.analysis import attribute_extractor
 from src.clustering import instance_clusterer
+from src.clustering.abstract_abstraction import AbstractAbstraction
 from src.clustering.abstract_clusterer import AbstractClusterer
-from src.clustering.instance_clusterer import InstanceClusterer
+from src.clustering.instance_clusterer import InstanceClusterer, InstanceAbstraction
 
 logger = logging.getLogger(__name__)
 
@@ -14,14 +15,31 @@ splits = {}
 
 
 class NumericalClusterer(AbstractClusterer):
-
-    def __init__(self, col_name, num_classes):
-        super().__init__(col_name)
+    # müsste in sich die Splits für die Spalte speichern. Dafür muss bei Instanziierung aber eben auch das df vorliegen
+    def __init__(self, col_name, abstraction):
         global splits
-        col_splits = splits.get(col_name, {})
-        bounds = col_splits.get(num_classes, [])
-        self.bounds = bounds
+        self.col_splits = splits.get(col_name, {})
+        super().__init__(col_name)
+        self.set_abstractions(abstraction)
 
+    def build_abstractions(self, col_name):
+        return {
+            f"numerical{col_name}_abstracted": (col_name, InstanceAbstraction(col_name, col_name, instance_clusterer.abstract_instance_complete)),
+            f"numerical{col_name}_2_classes": (col_name, NumericalAbstraction(col_name, col_name, self.col_splits.get(2, []))),
+            f"numerical{col_name}_4_classes": (col_name, NumericalAbstraction(col_name, col_name, self.col_splits.get(4, []))),
+            f"numerical{col_name}_8_classes": (col_name, NumericalAbstraction(col_name, col_name, self.col_splits.get(8, []))),
+            f"numerical{col_name}_not_abstracted": (col_name, InstanceAbstraction(col_name, col_name, instance_clusterer.abstract_instance)),
+        }
+
+    def set_abstractions(self, abstraction_function):
+        sel_func = self.abstractions.get(abstraction_function)  # TODO!
+        if sel_func is None:
+            self.abstraction_object = InstanceClusterer(self.col_name, instance_clusterer.abstract_instance_complete)
+            return False
+        else:
+            self.abstraction_object = sel_func[1]
+            return True
+    """
     def apply_abstraction(self, number):
         try:
             number = float(number)
@@ -33,7 +51,7 @@ class NumericalClusterer(AbstractClusterer):
 
         return None
         #print(f"Number {number} is greater than all splits {self.bounds}")
-
+    """
 
 def build_abstractions(df):
     for col_name in [key for key,value in attribute_extractor.event_attribute_type_mapping.items() if value == attribute_extractor.ATTRIBUTE_TYPES.NUMERICAL and key in df.columns.values.tolist()]:
@@ -69,7 +87,7 @@ def get_splitting(df, col_name, num_classes):
     splits[col_name] = current_splits
     logger.debug(f"splits {splits}")
     return bounds
-
+"""
 def get_all(col_name):
     return {
         f"numerical{col_name}_abstracted": (col_name, InstanceClusterer(col_name,instance_clusterer.abstract_instance_complete)),
@@ -78,5 +96,23 @@ def get_all(col_name):
         f"numerical{col_name}_8_classes": (col_name, NumericalClusterer(col_name, 8)),
         f"numerical{col_name}_not_abstracted": (col_name, InstanceClusterer(col_name, instance_clusterer.abstract_instance)),
     }
+"""
+
+class NumericalAbstraction(AbstractAbstraction):
+    def __init__(self, source_col, target_col, bounds):
+        super().__init__(source_col, target_col, None)
+        self.bounds = bounds
+
+    def apply_abstraction(self, number):
+        try:
+            number = float(number)
+        except ValueError:
+            logger.debug("number not to float castable")
+        for split in self.bounds:  # TODO change to List?
+            if split >= number:
+                return split
+
+        return None
+        # print(f"Number {number} is greater than all splits {self.bounds}")
 
 

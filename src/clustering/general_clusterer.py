@@ -11,6 +11,7 @@ from src.clustering import time_clusterer, activity_clusterer, resource_clustere
     numerical_clusterer, custom_clusterer
 from src.clustering.activity_clusterer import ActivityClusterer
 from src.clustering.instance_clusterer import InstanceClusterer
+from src.clustering.numerical_clusterer import NumericalClusterer
 from src.clustering.resource_clusterer import ResourceClusterer
 from src.clustering.time_clusterer import TimeClusterer
 
@@ -96,9 +97,10 @@ def build_abstractions():
                     abstraction_objects[col_name] = resource_cluster
 
                 case attribute_extractor.ATTRIBUTE_TYPES.NUMERICAL:
-                    continue
-                    abstraction_functions[f"numerical{col_name}"] = numerical_clusterer.get_all(col_name)
-                    logger.debug({f"numerical_{col_name}": numerical_clusterer.get_all(col_name)})
+                    numerical_cluster = NumericalClusterer(col_name, None)
+                    abstraction_functions[f"numerical{col_name}"] = numerical_cluster.get_all()
+                    logger.debug({f"numerical_{col_name}": numerical_cluster.get_all()})
+                    abstraction_objects[col_name] = numerical_cluster
 
                 case _:
                     instance_cluster = InstanceClusterer(col_name, None)
