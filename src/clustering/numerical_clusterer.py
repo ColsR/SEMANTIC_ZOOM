@@ -13,7 +13,6 @@ logger = logging.getLogger(__name__)
 
 splits = {}
 
-
 class NumericalClusterer(AbstractClusterer):
     # müsste in sich die Splits für die Spalte speichern. Dafür muss bei Instanziierung aber eben auch das df vorliegen
     def __init__(self, col_name, abstraction):
@@ -39,19 +38,23 @@ class NumericalClusterer(AbstractClusterer):
         else:
             self.abstraction_object = sel_func[1]
             return True
-    """
+
+
+class NumericalAbstraction(AbstractAbstraction):
+    def __init__(self, source_col, target_col, bounds):
+        super().__init__(source_col, target_col, None)
+        self.bounds = bounds
+
     def apply_abstraction(self, number):
         try:
             number = float(number)
         except ValueError:
             logger.debug("number not to float castable")
-        for split in self.bounds: # TODO change to List?
+        for split in self.bounds:  # TODO change to List?
             if split >= number:
                 return split
-
         return None
-        #print(f"Number {number} is greater than all splits {self.bounds}")
-    """
+
 
 def build_abstractions(df):
     for col_name in [key for key,value in attribute_extractor.event_attribute_type_mapping.items() if value == attribute_extractor.ATTRIBUTE_TYPES.NUMERICAL and key in df.columns.values.tolist()]:
@@ -87,32 +90,3 @@ def get_splitting(df, col_name, num_classes):
     splits[col_name] = current_splits
     logger.debug(f"splits {splits}")
     return bounds
-"""
-def get_all(col_name):
-    return {
-        f"numerical{col_name}_abstracted": (col_name, InstanceClusterer(col_name,instance_clusterer.abstract_instance_complete)),
-        f"numerical{col_name}_2_classes": (col_name, NumericalClusterer(col_name, 2)),
-        f"numerical{col_name}_4_classes": (col_name, NumericalClusterer(col_name, 4)),
-        f"numerical{col_name}_8_classes": (col_name, NumericalClusterer(col_name, 8)),
-        f"numerical{col_name}_not_abstracted": (col_name, InstanceClusterer(col_name, instance_clusterer.abstract_instance)),
-    }
-"""
-
-class NumericalAbstraction(AbstractAbstraction):
-    def __init__(self, source_col, target_col, bounds):
-        super().__init__(source_col, target_col, None)
-        self.bounds = bounds
-
-    def apply_abstraction(self, number):
-        try:
-            number = float(number)
-        except ValueError:
-            logger.debug("number not to float castable")
-        for split in self.bounds:  # TODO change to List?
-            if split >= number:
-                return split
-
-        return None
-        # print(f"Number {number} is greater than all splits {self.bounds}")
-
-

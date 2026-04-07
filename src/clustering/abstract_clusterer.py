@@ -3,7 +3,6 @@ from abc import ABC, abstractmethod
 
 class AbstractClusterer(ABC):
 
-
     def __init__(self, col_name):
         self.col_name = col_name
         self.abstraction_object = None
