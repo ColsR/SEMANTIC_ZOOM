@@ -30,11 +30,11 @@ def rename_abstraction(df, target_column, source_column, abstraction, mask):
     df.loc[mask, target_column] = df.loc[mask, source_column].apply(lambda x : abstraction(x))
     return df
 
-def object_abstraction(df, target_column, source_column, abstraction_obj, mask):
-    if not abstraction_obj.check_columns(df.columns):
+def object_abstraction(df, target_column, source_column, clusterer, mask):
+    if not clusterer.check_columns(df.columns):
         logger.error("Cannot Apply abstraction because source or target column is not in dataframe. Should be handled before")
         return df
-    df.loc[mask, target_column] = df.loc[mask, source_column].apply(lambda x: abstraction_obj.apply_abstraction(x))
+    df.loc[mask, target_column] = df.loc[mask, source_column].apply(lambda x: clusterer.apply_abstraction(x))
     return df
 
 
