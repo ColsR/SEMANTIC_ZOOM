@@ -3,13 +3,10 @@ import json
 import logging
 from pathlib import Path
 
-import pandas as pd
-import pm4py
-
 from src.analysis import attribute_extractor
-from src.clustering import time_clusterer, activity_clusterer, resource_clusterer, instance_clusterer, \
-    numerical_clusterer, custom_clusterer
+from src.clustering import custom_clusterer
 from src.clustering.activity_clusterer import ActivityClusterer
+from src.clustering.custom_clusterer import CustomClusterer
 from src.clustering.instance_clusterer import InstanceClusterer
 from src.clustering.numerical_clusterer import NumericalClusterer
 from src.clustering.resource_clusterer import ResourceClusterer
@@ -63,22 +60,23 @@ def build_abstractions():
     logger.info(f"attribute_mapping: {attributes}")
     custom_columns = set()
 
-    """
     # load custom abstractions
-    custom_cluster = custom_clusterer.get_all(None)
-    for col_name, clusterer in custom_cluster.items():
+    project_root = Path(__file__).resolve().parent.parent.parent
+    FILEPATH = project_root / 'data' / 'working_data'
+    custom_abstractions = custom_clusterer.load_custom_abstractions(FILEPATH)
+    for custom_abstraction in custom_abstractions:
+        col_name = custom_abstraction["col_name"]
+        abstraction_map = custom_abstraction["abstractions"]
+        custom_cluster = CustomClusterer(col_name, None, abstraction_map)
+        abstraction_functions[f"custom{col_name}"] = custom_cluster.get_all()
+        abstraction_objects[col_name] = custom_cluster
         custom_columns.add(col_name)
-        abstraction_functions[f"custom{col_name}"] = clusterer
-        logger.debug({f"custom{col_name}": time_clusterer.get_all(col_name)})
-    """
 
     for col_name, attribute_type in attributes.items():
         if col_name not in custom_columns:
             match attribute_type:
 
                 case attribute_extractor.ATTRIBUTE_TYPES.TIME:
-                    # abstraction_functions[f"time_{col_name}"] = time_clusterer.get_all(col_name)
-                    # Hier muss das Time_Cluster_Objekt erstellt werden
                     time_cluster = TimeClusterer(col_name, None)
                     abstraction_functions[f"time_{col_name}"] = time_cluster.get_all()
                     logger.debug({f"time_{col_name}" : time_cluster.get_all()})
@@ -114,43 +112,3 @@ def build_abstractions():
     column_abstraction_mapping = {k: v[1].target_col for group in abstraction_functions.values() for k, v in group.items()}
     logger.debug(f"Flat: {flat_abstraction_functions}")
     return abstraction_functions, flat_abstraction_functions, abstraction_objects, column_abstraction_mapping
-
-
-
-
-"""
-ABSTRACTION_FUNCTIONS = {
-    "time":
-        {
-            "time_month": ('time:timestamp', time_clusterer.abstract_time_to_month),
-            "time_week": ('time:timestamp', time_clusterer.abstract_time_to_week),
-            "time_day": ('time:timestamp', time_clusterer.abstract_time_to_day),
-            "time_hour": ('time:timestamp', time_clusterer.abstract_time_to_hour),
-            "time_minute": ('time:timestamp', time_clusterer.abstract_time_to_minute),
-            "time_not_abstracted": ('time:timestamp', instance_clusterer.abstract_instance)
-        },
-    "activity":
-        {
-            "activity_abstracted2": ('concept:name', activity_clusterer.abstract_activity2),
-            "activity_abstracted": ('concept:name', activity_clusterer.abstract_activity),
-            "activity_not_abstracted": ('concept:name', instance_clusterer.abstract_instance)
-        },
-    "resource":
-        {
-            "resource_abstracted": ('org:resource', ressource_clusterer.abstract_resource_complete),
-            "resource_not_abstracted": ('org:resource', instance_clusterer.abstract_instance)
-        },
-}
-"""
-
-#FLAT_ABSTRACTION_FUNCTIONS = {k: v for group in ABSTRACTION_FUNCTIONS.values() for k, v in group.items()}
-
-
-def abstraction_1(df):
-    print(df.columns)
-    df = rename_abstraction(df, 'concept:name','concept:name', activity_clusterer.abstract_activity2)
-    print("abstracted activities")
-    print(df)
-    return rename_abstraction(df, 'time:timestamp','time:timestamp', time_clusterer.abstract_time_to_week)
-
-
