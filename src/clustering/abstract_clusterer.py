@@ -37,11 +37,11 @@ class AbstractClusterer(ABC):
         sel_func = self.abstractions.get(abstraction_function)  # TODO!
         if sel_func is None:
             available_abstraction = list(self.abstractions.values())
-            available_abstraction.sort(key=lambda x: x[1].ranking)
-            self.abstraction_object = available_abstraction[0][1]
+            available_abstraction.sort(key=lambda x: x.ranking)
+            self.abstraction_object = available_abstraction[0]
             return False
         else:
-            self.abstraction_object = sel_func[1]
+            self.abstraction_object = sel_func
             return True
 
     @abstractmethod

@@ -16,7 +16,7 @@ class CustomClusterer(AbstractClusterer):
 
     def build_abstractions(self, col_name):
         clusterer_entries = dict()
-        clusterer_entries[f"custom{col_name}_abstracted"] = (col_name, InstanceAbstraction(self.col_name, self.col_name, instance_clusterer.abstract_instance_complete, 0))
+        clusterer_entries[f"custom{col_name}_abstracted"] = InstanceAbstraction(self.col_name, self.col_name, instance_clusterer.abstract_instance_complete, 0)
         for level, mappings in self.reverse_map.items():
             # Reverse Mapping from abstracted_ value -> [specific attributes] to specific_attribute -> abstracted_value
             reverse_map = {
@@ -24,9 +24,9 @@ class CustomClusterer(AbstractClusterer):
                 for group, values in mappings.items()
                 for raw in values
             }
-            clusterer_entries[f"custom{col_name}_{level}"] = (col_name, CustomAbstraction(col_name, col_name, reverse_map))
+            clusterer_entries[f"custom{col_name}_{level}"] = CustomAbstraction(col_name, col_name, reverse_map)
 
-        clusterer_entries[f"custom{col_name}_not_abstracted"] = (col_name, InstanceAbstraction(col_name, col_name, instance_clusterer.abstract_instance, 100))
+        clusterer_entries[f"custom{col_name}_not_abstracted"] = InstanceAbstraction(col_name, col_name, instance_clusterer.abstract_instance, 100)
         return clusterer_entries
 
     """

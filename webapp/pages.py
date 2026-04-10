@@ -126,7 +126,7 @@ def get_abstracted_data():
     # Mapping auf die Abstractions, hier müsste dann das mapping auf die Abstrkationsobjekte erfolgen, bzw. die korrekte Abstrkationsfunktion gesetzt werden
     # man braucht die Spalte und kann sich damit das Abstrkationsobjekt ziehen, dann braucht man die Abstrkationsfunktion, um sie im Objekt zu setzen
     # erstmal über das alte Mapping auch wenn hässlich, evtl API umbauen. Die column steht als target_column eigentlich in dem Clusterer-Objekt
-    abstractions = [FLAT_ABSTRACTION_FUNCTIONS[abstraction] for abstraction in requested_abstractions if abstraction in FLAT_ABSTRACTION_FUNCTIONS.keys()]
+    #abstractions = [FLAT_ABSTRACTION_FUNCTIONS[abstraction] for abstraction in requested_abstractions if abstraction in FLAT_ABSTRACTION_FUNCTIONS.keys()]
     abstraction_objects = []
     for requested_abstraction in requested_abstractions:
         #abstraction_obj = FLAT_ABSTRACTION_FUNCTIONS[requested_abstraction] if requested_abstraction in FLAT_ABSTRACTION_FUNCTIONS.keys() else None
@@ -141,7 +141,7 @@ def get_abstracted_data():
 
     #abstraction_objects = [(abstraction, ABSTRACTIONS_OBJECTS.get(FLAT_ABSTRACTION_FUNCTIONS[abstraction][0])) for abstraction in requested_abstractions if abstraction in FLAT_ABSTRACTION_FUNCTIONS.keys()]
     # ich brauche aus dem FrontEnd die Info welche Abstraktion auf welche Spalte
-    logger.info(f"abstractions: {abstractions}")
+    #logger.info(f"abstractions: {abstractions}")
 
     requested_exclusions = data.get("exclusions")
     logger.info(f"requested exclusions: {requested_exclusions}")
@@ -157,7 +157,7 @@ def get_abstracted_data():
         logger.debug("exclusion branch")
         df = process_log_for_d3js_exclusions(df, exclusions)
     else:
-        logger.debug(f"abstractions branch with {abstractions}")
+        #logger.debug(f"abstractions branch with {abstractions}")
         df = process_log_for_d3js_abstractions(df, abstraction_objects)
     logger.info("Processed log for d3js with abstractions")
     df.head()

@@ -107,6 +107,6 @@ def build_abstractions():
 
     # flat_abstractions als mapping key: (col, obj?)
     flat_abstraction_functions = {k: v for group in abstraction_functions.values() for k, v in group.items()}
-    column_abstraction_mapping = {k: v[1].target_col for group in abstraction_functions.values() for k, v in group.items()}
+    column_abstraction_mapping = {k: v.target_col for group in abstraction_functions.values() for k, v in group.items()}
     logger.debug(f"Flat: {flat_abstraction_functions}")
     return abstraction_functions, flat_abstraction_functions, abstraction_objects, column_abstraction_mapping
