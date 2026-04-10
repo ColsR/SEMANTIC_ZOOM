@@ -21,6 +21,7 @@ E-Mail: {firstname.lastname}@hu-berlin.de
 import copy
 import json
 import logging
+from json import JSONDecodeError
 from pathlib import Path
 
 from src.clustering import general_clusterer, specific_clusterer
@@ -50,7 +51,7 @@ def process_log_for_d3js(df):
     df_proc = df_proc.fillna("nan") # In case some values are NaN, replace them with "nan" string for JSON compatibility
     return df_proc
 
-def process_log_for_d3js_abstractions(df, abstractions):
+def process_log_for_d3js_abstractions(df, abstractions, sp_zooms):
     """
     Pre-process the event log for visualization in d3.js.
     """
@@ -69,26 +70,29 @@ def process_log_for_d3js_abstractions(df, abstractions):
     ABSTRACTION_FUNCTIONS, FLAT_ABSTRACTION_FUNCTIONS, ABSTRACTION_OBJECTS, COLUMN_ABSTRACTION_MAPPING = general_clusterer.get_abstractions()  # build_abstractions
 
     with open(f'{FILEPATH}/specific_zooms.json', 'r') as f:
-        specific_zoomings = json.load(f)
-        for specific_zooming in specific_zoomings:
-            sp_target_column = specific_zooming['target_column']
-            sp_source_column = specific_zooming['filter_column']
-            sp_filter_attribute = specific_zooming['filter_attribute']
-            sp_abstraction_function = specific_zooming['abstraction_function']
+        try:
+            for specific_zooming in sp_zooms:
+                sp_target_column = specific_zooming['target_column']
+                sp_source_column = specific_zooming['filter_column']
+                sp_filter_attribute = specific_zooming['filter_attribute']
+                sp_abstraction_function = specific_zooming['abstraction_function']
 
-            clusterer = ABSTRACTION_OBJECTS.get(sp_target_column)
-            if clusterer is None:
-                logger.warning(f"Cannot find clusterer for column {sp_target_column} in COLUMN_ABSTRACTION_MAPPING. Continue")
-                continue
-            sp_abstraction = copy.deepcopy(clusterer.abstractions.get(sp_abstraction_function))
-            if sp_abstraction is None:
-                logger.warning(f"Cannot find abstraction function {sp_abstraction_function} for column {sp_target_column} in clusterer. Continue")
-                continue
+                clusterer = ABSTRACTION_OBJECTS.get(sp_target_column)
+                if clusterer is None:
+                    logger.warning(f"Cannot find clusterer for column {sp_target_column} in COLUMN_ABSTRACTION_MAPPING. Continue")
+                    continue
+                sp_abstraction = copy.deepcopy(clusterer.abstractions.get(sp_abstraction_function))
+                if sp_abstraction is None:
+                    logger.warning(f"Cannot find abstraction function {sp_abstraction_function} for column {sp_target_column} in clusterer. Continue")
+                    continue
 
-            sp_mask = specific_clusterer.build_mask(df_proc, sp_source_column, sp_filter_attribute)
-            sp_abstraction.set_mask(sp_mask)
-            # ADD new abstraction.
-            clusterer.add_specific_abstraction(sp_abstraction)
+                sp_mask = specific_clusterer.build_mask(df_proc, sp_source_column, sp_filter_attribute)
+                sp_abstraction.set_mask(sp_mask)
+                # ADD new abstraction.
+                clusterer.add_specific_abstraction(sp_abstraction)
+        except JSONDecodeError as e:
+            logger.error(f"Error decoding specific_zooms.json: {e}")
+
 
     for cluster_obj in abstractions:
         if not cluster_obj.check_columns(df_proc.columns):

@@ -34,6 +34,7 @@ import logging
 from src.algo.super_graph import build_super_graph
 # from src.analysis.attribute_extractor import AttributeExtractor
 import src.analysis.attribute_extractor as attribute_extractor
+from src.analysis.data_extraction import get_occurring_entries
 from src.clustering import general_clusterer, numerical_clusterer
 from src.clustering.specific_clusterer import EXCLUDING_FUNCTIONS
 from src.utils.data_exporting import export_event_log, export_event_log_custom
@@ -120,6 +121,7 @@ def upload_data():
 def get_abstracted_data():
     data = request.get_json()
     requested_abstractions = data.get("abstractions")
+    requested_sp_zooms = data.get("specific_zooms")
     logger.info(f"requested abstractions: {requested_abstractions}")
     # print(f"FLAT Abstractions loading from {general_clusterer.get_abstractions()}") # build_abstractions
     ABSTRACTION_FUNCTIONS, FLAT_ABSTRACTION_FUNCTIONS, ABSTRACTIONS_OBJECTS, COlUMN_ABSTRACTION_MAPPING = general_clusterer.get_abstractions() # build_abstractions
@@ -158,7 +160,7 @@ def get_abstracted_data():
         df = process_log_for_d3js_exclusions(df, exclusions)
     else:
         #logger.debug(f"abstractions branch with {abstractions}")
-        df = process_log_for_d3js_abstractions(df, abstraction_objects)
+        df = process_log_for_d3js_abstractions(df, abstraction_objects, requested_sp_zooms)
     logger.info("Processed log for d3js with abstractions")
     df.head()
     # export the abstracted log to a csv and a xes file
@@ -193,6 +195,21 @@ def get_available_abstractions():
     abstraction_keys = {attr : list(ABSTRACTION_FUNCTIONS[attr].keys()) for attr in ABSTRACTION_FUNCTIONS.keys()}
     return jsonify(abstraction_keys)
 
+@bp.route("/api/available_abstractions/<col_name>")
+def get_available_abstractions_for_column(col_name):
+    ABSTRACTION_FUNCTIONS, FLAT_ABSTRACTION_FUNCTIONS, ABSTRACTIONS_OBJECTS, COlUMN_ABSTRACTION_MAPPING = general_clusterer.get_abstractions() # build_abstractions
+    logger.info(f"Available abstractions {ABSTRACTION_FUNCTIONS}")
+    if (clusterer := ABSTRACTIONS_OBJECTS.get(col_name)) is not None:
+        abstraction_keys = clusterer.abstractions.keys()
+        print(abstraction_keys)
+        return jsonify(list(abstraction_keys))
+    else:
+        logger.warning(f"No abstraction found for column: {col_name}")
+        return jsonify([])
+    #abstraction_keys = {attr : list(ABSTRACTION_FUNCTIONS[attr].keys()) for attr in ABSTRACTION_FUNCTIONS.keys()}
+    #return jsonify(abstraction_keys)
+
+
 @bp.route("/api/available_exclusions")
 def get_available_exclusions():
     return jsonify(list(EXCLUDING_FUNCTIONS.keys()))
@@ -221,4 +238,7 @@ def post_attribute_types():
     general_clusterer.get_abstractions()
     return jsonify({"success": "OK"})
 
-
+@bp.route("/api/occurring_entries/<col_name>", methods=['GET'])
+def get_occurring_entries_for_column(col_name):
+    occurring_entries = get_occurring_entries(col_name)
+    return jsonify(occurring_entries)
