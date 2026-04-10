@@ -136,7 +136,7 @@ def get_abstracted_data():
             logger.warning("requested abstraction does not have a corresponding column in the log, skipping")
             continue
         cluster_obj = ABSTRACTIONS_OBJECTS[col_name]
-        cluster_obj.set_abstractions(requested_abstraction)
+        cluster_obj.set_abstraction(requested_abstraction)
         abstraction_objects.append(cluster_obj)
 
     #abstraction_objects = [(abstraction, ABSTRACTIONS_OBJECTS.get(FLAT_ABSTRACTION_FUNCTIONS[abstraction][0])) for abstraction in requested_abstractions if abstraction in FLAT_ABSTRACTION_FUNCTIONS.keys()]

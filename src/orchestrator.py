@@ -101,7 +101,7 @@ def process_log_for_d3js_abstractions(df, abstractions):
     for cluster_obj in abstractions:
         if not cluster_obj.check_columns(df_proc.columns):
             logger.warning("Cannot Apply abstraction because source or target column is not in dataframe. Use default Abstraction")
-            cluster_obj.set_abstractions(None)
+            cluster_obj.set_abstraction(None)
         df_proc = object_abstraction(df_proc, cluster_obj.col_name, cluster_obj.col_name, cluster_obj, cluster_obj.mask)
     logger.debug(df_proc.head())
     #df_proc = rename_cols_for_d3csv(df_proc)

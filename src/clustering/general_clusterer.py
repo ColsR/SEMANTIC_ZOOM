@@ -1,5 +1,3 @@
-import configparser
-import json
 import logging
 from pathlib import Path
 
@@ -67,7 +65,7 @@ def build_abstractions():
     for custom_abstraction in custom_abstractions:
         col_name = custom_abstraction["col_name"]
         abstraction_map = custom_abstraction["abstractions"]
-        custom_cluster = CustomClusterer(col_name, None, abstraction_map)
+        custom_cluster = CustomClusterer(col_name, abstraction_map)
         abstraction_functions[f"custom{col_name}"] = custom_cluster.get_all()
         abstraction_objects[col_name] = custom_cluster
         custom_columns.add(col_name)
@@ -77,31 +75,31 @@ def build_abstractions():
             match attribute_type:
 
                 case attribute_extractor.ATTRIBUTE_TYPES.TIME:
-                    time_cluster = TimeClusterer(col_name, None)
+                    time_cluster = TimeClusterer(col_name)
                     abstraction_functions[f"time_{col_name}"] = time_cluster.get_all()
                     logger.debug({f"time_{col_name}" : time_cluster.get_all()})
                     abstraction_objects[col_name] = time_cluster
 
                 case attribute_extractor.ATTRIBUTE_TYPES.ACTIVITY:
-                    activity_cluster = ActivityClusterer(col_name, None)
+                    activity_cluster = ActivityClusterer(col_name)
                     abstraction_functions[f"activity_{col_name}"] = activity_cluster.get_all()
                     logger.debug({f"activity{col_name}" : activity_cluster.get_all()})
                     abstraction_objects[col_name] = activity_cluster
 
                 case attribute_extractor.ATTRIBUTE_TYPES.RESOURCE:
-                    resource_cluster = ResourceClusterer(col_name, None)
+                    resource_cluster = ResourceClusterer(col_name)
                     abstraction_functions[f"resource{col_name}"] = resource_cluster.get_all()
                     logger.debug({f"resource{col_name}" : resource_cluster.get_all()})
                     abstraction_objects[col_name] = resource_cluster
 
                 case attribute_extractor.ATTRIBUTE_TYPES.NUMERICAL:
-                    numerical_cluster = NumericalClusterer(col_name, None)
+                    numerical_cluster = NumericalClusterer(col_name)
                     abstraction_functions[f"numerical{col_name}"] = numerical_cluster.get_all()
                     logger.debug({f"numerical_{col_name}": numerical_cluster.get_all()})
                     abstraction_objects[col_name] = numerical_cluster
 
                 case _:
-                    instance_cluster = InstanceClusterer(col_name, None)
+                    instance_cluster = InstanceClusterer(col_name)
                     abstraction_functions[f"misc{col_name}"] = instance_cluster.get_all()
                     logger.debug("Not supported yet")
                     logger.debug({f"misc{col_name}" : instance_cluster.get_all()})

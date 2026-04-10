@@ -18,35 +18,36 @@ class TimeClusterer(AbstractClusterer):
         MINUTE = "MINUTE"
         SECOND = "SECOND"
 
-    def __init__(self, col_name, abstraction):
+    def __init__(self, col_name):
         super().__init__(col_name)
-        self.set_abstractions(abstraction)
+        self.set_abstraction(None)
 
     def build_abstractions(self, col_name):
         return {
-            "time_abstracted": (col_name, TimeAbstraction(col_name, col_name, abstract_time_complete)),
-            "time_year": (col_name,TimeAbstraction(col_name, col_name,  abstract_time_to_year)),
-            "time_month": (col_name,TimeAbstraction(col_name, col_name, abstract_time_to_month)),
-            "time_week": (col_name,TimeAbstraction(col_name, col_name, abstract_time_to_week)),
-            "time_day": (col_name,TimeAbstraction(col_name, col_name, abstract_time_to_day)),
-            "time_hour": (col_name,TimeAbstraction(col_name, col_name, abstract_time_to_hour)),
-            "time_minute": (col_name,TimeAbstraction(col_name, col_name, abstract_time_to_minute)),
-            "time_not_abstracted": (col_name,TimeAbstraction(col_name, col_name, instance_clusterer.abstract_instance)),
+            "time_abstracted": (col_name, TimeAbstraction(col_name, col_name, abstract_time_complete, 0)),
+            "time_year": (col_name,TimeAbstraction(col_name, col_name,  abstract_time_to_year, 1)),
+            "time_month": (col_name,TimeAbstraction(col_name, col_name, abstract_time_to_month, 2)),
+            "time_week": (col_name,TimeAbstraction(col_name, col_name, abstract_time_to_week, 3)),
+            "time_day": (col_name,TimeAbstraction(col_name, col_name, abstract_time_to_day, 4)),
+            "time_hour": (col_name,TimeAbstraction(col_name, col_name, abstract_time_to_hour, 5)),
+            "time_minute": (col_name,TimeAbstraction(col_name, col_name, abstract_time_to_minute, 6)),
+            "time_not_abstracted": (col_name,TimeAbstraction(col_name, col_name, instance_clusterer.abstract_instance, 100)),
         }
 
+    """
     def set_abstractions(self, abstraction_function):
         sel_func = self.abstractions.get(abstraction_function)
         if sel_func is None:
-            self.abstraction_object = TimeAbstraction(self.col_name, self.col_name, abstract_time_complete)
+            self.abstraction_object = TimeAbstraction(self.col_name, self.col_name, abstract_time_complete, 0)
             return False
         else:
             self.abstraction_object = sel_func[1]
             return True
-
+    """
 
 class TimeAbstraction(AbstractAbstraction):
-    def __init__(self, source_col, target_col, abstraction_function):
-        super().__init__(source_col, target_col, abstraction_function)
+    def __init__(self, source_col, target_col, abstraction_function, ranking=1):
+        super().__init__(source_col, target_col, abstraction_function, ranking)
 
 
 def abstract_time_complete(timestamp):
