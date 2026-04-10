@@ -60,22 +60,13 @@ def process_log_for_d3js_abstractions(df, abstractions):
     df_proc = relativeTimestamps(df_proc)
     df_proc, _ = global_ranking_of_eventdata(df_proc)
 
-
-    # TODO die masken müssen noch korrekt berechnet werden: über die Spalten: Standard als logische NOR Verkmüpfung, ggf. mal schauen wie man es mit dem Ranking macht. Ggf. muss man allen Abstraktionsmöglichkeiten noch ein Ranking mitgeben
-
     standard_mask = [True] * len(df_proc)
     for cluster_obj in abstractions:
-        cluster_obj.set_mask(standard_mask)
-    """
-    for (column, abstraction_obj) in abstractions:
-        abstraction_obj.set_mask(standard_mask)
-    """
+        cluster_obj.set_mask(list(standard_mask.copy()))
+
     # Specific Zooming
     # TODO pass as parameter not loaded from file
     ABSTRACTION_FUNCTIONS, FLAT_ABSTRACTION_FUNCTIONS, ABSTRACTION_OBJECTS, COLUMN_ABSTRACTION_MAPPING = general_clusterer.get_abstractions()  # build_abstractions
-    # man bekommt aus dem Frontend die Abstraktionsfunktion über den entsprechenden Clusterer...
-    # dann kann man aus der Spalte das Cluster-Objekt ziehen, das Abstraktionsobjekt instanziieren und die Maske bauen lassen
-    # das Abstraktionsobjekt wird dem Clusterer hinzugefügt -> fertig
 
     with open(f'{FILEPATH}/specific_zooms.json', 'r') as f:
         specific_zoomings = json.load(f)
@@ -99,31 +90,13 @@ def process_log_for_d3js_abstractions(df, abstractions):
             # ADD new abstraction.
             clusterer.add_specific_abstraction(sp_abstraction)
 
-            """
-            logger.info(f"Processing {sp_target_column} -> {sp_source_column} for {sp_filter_attribute} with {sp_abstraction_function}")
-            if (std_abstraction := FLAT_ABSTRACTION_FUNCTIONS.get(sp_abstraction_function)) is not None:
-                # TODO man könnte noch drüber nachdenken, ob man die Info auf welceh Spalte die Abstraktion ausgeführt werden soll nicht aus der json kommt, sondern aus der ursprünglichen Abstraktionsdefinition bzw. zumindest asserten und dann loggen wenn es nicht passt
-                sp_abstraction = copy.deepcopy(std_abstraction)
-                sp_mask = specific_clusterer.build_mask(df_proc, sp_source_column, sp_filter_attribute)
-                sp_abstraction.set_mask(sp_mask)
-                # ADD new abstraction.
-                abstractions.append((sp_target_column,sp_abstraction))
-            """
-
-    # Apply abstractions
-    """
-    for (column, abstraction_obj) in abstractions:
-        # Hier hat man dann das AbstrkationsObjekt auf Spalten Ebene, das man nutzt, um die Abstraktion anzuwenden
-        logger.debug(f"Apply Abstraction {abstraction_obj} on column {column}")
-        df_proc = rename_abstraction(df_proc, column, abstraction_obj.col_name, abstraction_obj.apply_abstraction, abstraction_obj.mask)
-    """
     for cluster_obj in abstractions:
         if not cluster_obj.check_columns(df_proc.columns):
             logger.warning("Cannot Apply abstraction because source or target column is not in dataframe. Use default Abstraction")
             cluster_obj.set_abstraction(None)
         cluster_obj.calculate_masks()
         df_proc = cluster_abstraction(df_proc, cluster_obj)
-        #df_proc = object_abstraction(df_proc, cluster_obj.col_name, cluster_obj.col_name, cluster_obj, cluster_obj.mask)
+
     logger.debug(df_proc.head())
     #df_proc = rename_cols_for_d3csv(df_proc)
     logger.debug("nach renaming")

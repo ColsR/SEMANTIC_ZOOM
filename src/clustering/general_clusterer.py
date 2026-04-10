@@ -39,10 +39,10 @@ def cluster_abstraction(df, clusterer):
     if not clusterer.check_columns(df.columns):
         logger.error("Cannot Apply abstraction because source or target column is not in dataframe. Should be handled before")
         return df
-    for abstraction_obj in clusterer.abstraction_objects:
+    for abstraction_obj in clusterer.sp_abstraction_objects:
         df.loc[abstraction_obj.mask, abstraction_obj.target_col] = df.loc[abstraction_obj.mask, abstraction_obj.source_col].apply(lambda x: abstraction_obj.apply_abstraction(x))
     # default abstraction object
-    df.loc[clusterer.abstraction_object.mask, clusterer.abstraction_object.target_col] = df.loc[clusterer.abstraction_object.mask, clusterer.abstraction_object.source_col].apply(lambda x: clusterer.abstraction_object.apply_abstraction(x))
+    df.loc[clusterer.std_abstraction_object.mask, clusterer.std_abstraction_object.target_col] = df.loc[clusterer.std_abstraction_object.mask, clusterer.std_abstraction_object.source_col].apply(lambda x: clusterer.std_abstraction_object.apply_abstraction(x))
     return df
 
 def get_abstractions():
