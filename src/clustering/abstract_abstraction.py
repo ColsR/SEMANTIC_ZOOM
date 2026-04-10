@@ -8,6 +8,10 @@ class AbstractAbstraction(ABC):
         self.target_col = target_col
         self.abstraction_function = abstraction_function
         self.ranking = ranking
+        self.mask = None
 
     def apply_abstraction(self, value):
         return self.abstraction_function(value)
+
+    def set_mask(self, mask):
+        self.mask =  mask
