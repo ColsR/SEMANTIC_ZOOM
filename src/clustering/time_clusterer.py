@@ -51,7 +51,7 @@ class TimeAbstraction(AbstractAbstraction):
 
 
 def abstract_time_complete(timestamp):
-    return pd.Timestamp(0) #TODO xes exporting is not working when abstracted timestmap to pd.Timestamp(0= -> find other way
+    return pd.Timestamp(0, tz="UTC")
 
 def abstract_time_to_year(timestamp):
     return timestamp.replace(month=1, day=1, hour=0, minute=0, second=0, microsecond=0)
