@@ -36,10 +36,9 @@ from src.algo.super_graph import build_super_graph
 import src.analysis.attribute_extractor as attribute_extractor
 from src.analysis.data_extraction import get_occurring_entries
 from src.clustering import general_clusterer, numerical_clusterer
-from src.clustering.specific_clusterer import EXCLUDING_FUNCTIONS
 from src.utils.data_exporting import export_event_log, export_event_log_custom
 from src.utils.data_importing import load_event_log_from_tempfile
-from src.orchestrator import process_log_for_d3js, process_log_for_d3js_abstractions, process_log_for_d3js_exclusions
+from src.orchestrator import process_log_for_d3js, process_log_for_d3js_abstractions
 
 # App directory
 project_root = Path(__file__).resolve().parent.parent
@@ -145,22 +144,12 @@ def get_abstracted_data():
     # ich brauche aus dem FrontEnd die Info welche Abstraktion auf welche Spalte
     #logger.info(f"abstractions: {abstractions}")
 
-    requested_exclusions = data.get("exclusions")
-    logger.info(f"requested exclusions: {requested_exclusions}")
-    exclusions = [EXCLUDING_FUNCTIONS[exclusion] for exclusion in requested_exclusions if
-                    exclusion in EXCLUDING_FUNCTIONS]
-
     # Load the non-abstracted log from the temporary file created during upload
     df = load_event_log_from_tempfile(f"{FILEPATH}/persistent_log.xes")
     logger.debug("Loaded persistent log ")
     logger.debug(len(df))
     logger.debug(df.head())
-    if len(exclusions) > 0:
-        logger.debug("exclusion branch")
-        df = process_log_for_d3js_exclusions(df, exclusions)
-    else:
-        #logger.debug(f"abstractions branch with {abstractions}")
-        df = process_log_for_d3js_abstractions(df, abstraction_objects, requested_sp_zooms)
+    df = process_log_for_d3js_abstractions(df, abstraction_objects, requested_sp_zooms)
     logger.info("Processed log for d3js with abstractions")
     df.head()
     # export the abstracted log to a csv and a xes file
@@ -209,10 +198,6 @@ def get_available_abstractions_for_column(col_name):
     #abstraction_keys = {attr : list(ABSTRACTION_FUNCTIONS[attr].keys()) for attr in ABSTRACTION_FUNCTIONS.keys()}
     #return jsonify(abstraction_keys)
 
-
-@bp.route("/api/available_exclusions")
-def get_available_exclusions():
-    return jsonify(list(EXCLUDING_FUNCTIONS.keys()))
 
 @bp.route("/api/attributes")
 def get_available_attributes():
