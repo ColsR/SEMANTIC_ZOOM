@@ -128,6 +128,8 @@ def get_abstracted_data():
     # man braucht die Spalte und kann sich damit das Abstrkationsobjekt ziehen, dann braucht man die Abstrkationsfunktion, um sie im Objekt zu setzen
     # erstmal über das alte Mapping auch wenn hässlich, evtl API umbauen. Die column steht als target_column eigentlich in dem Clusterer-Objekt
     #abstractions = [FLAT_ABSTRACTION_FUNCTIONS[abstraction] for abstraction in requested_abstractions if abstraction in FLAT_ABSTRACTION_FUNCTIONS.keys()]
+    for cluster_obj in ABSTRACTIONS_OBJECTS.values():
+        cluster_obj.reset_specific_abstractions() # build specific abstractions everytime new
     abstraction_objects = []
     for requested_abstraction in requested_abstractions:
         #abstraction_obj = FLAT_ABSTRACTION_FUNCTIONS[requested_abstraction] if requested_abstraction in FLAT_ABSTRACTION_FUNCTIONS.keys() else None

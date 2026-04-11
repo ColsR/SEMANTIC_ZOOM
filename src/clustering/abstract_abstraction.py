@@ -9,9 +9,13 @@ class AbstractAbstraction(ABC):
         self.abstraction_function = abstraction_function
         self.ranking = ranking
         self.mask = None
+        self.mask_source_col = None
 
     def apply_abstraction(self, value):
         return self.abstraction_function(value)
 
     def set_mask(self, mask):
         self.mask =  mask
+
+    def set_mask_source_column(self, mask_source_column):
+        self.mask_source_col = mask_source_column

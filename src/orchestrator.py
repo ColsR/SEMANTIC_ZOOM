@@ -60,6 +60,9 @@ def process_log_for_d3js_abstractions(df, abstractions, sp_zooms):
     df_proc = relativeTimestamps(df_proc)
     df_proc, _ = global_ranking_of_eventdata(df_proc)
 
+
+
+
     standard_mask = [True] * len(df_proc)
     for cluster_obj in abstractions:
         cluster_obj.set_mask(list(standard_mask.copy()))
@@ -87,11 +90,14 @@ def process_log_for_d3js_abstractions(df, abstractions, sp_zooms):
 
                 sp_mask = specific_clusterer.build_mask(df_proc, sp_source_column, sp_filter_attribute)
                 sp_abstraction.set_mask(sp_mask)
+                sp_abstraction.set_mask_source_column(sp_source_column)
                 # ADD new abstraction.
                 clusterer.add_specific_abstraction(sp_abstraction)
         except JSONDecodeError as e:
             logger.error(f"Error decoding specific_zooms.json: {e}")
 
+    # Dependency detection
+    specific_clusterer.build_dependency_graph(abstractions)
 
     for cluster_obj in abstractions:
         if not cluster_obj.check_columns(df_proc.columns):
