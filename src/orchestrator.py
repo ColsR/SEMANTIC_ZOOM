@@ -102,7 +102,7 @@ def process_log_for_d3js_abstractions(df, abstractions, sp_zooms):
             for abstraction in abstraction_list:
                 if abstraction.mask_filter_attribute is not None:
                     sp_mask = specific_clusterer.build_mask(df_proc, abstraction.mask_source_col, abstraction.mask_filter_attribute)
-                    sp_abstraction.set_mask(sp_mask)
+                    abstraction.set_mask(sp_mask)
             if not cluster_obj.check_columns(df_proc.columns):
                 logger.warning("Cannot Apply abstraction because source or target column is not in dataframe. Use default Abstraction")
                 cluster_obj.set_abstraction(None)
