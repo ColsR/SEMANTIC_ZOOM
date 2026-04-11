@@ -70,42 +70,53 @@ def process_log_for_d3js_abstractions(df, abstractions, sp_zooms):
     # Specific Zooming
     # TODO pass as parameter not loaded from file
     ABSTRACTION_FUNCTIONS, FLAT_ABSTRACTION_FUNCTIONS, ABSTRACTION_OBJECTS, COLUMN_ABSTRACTION_MAPPING = general_clusterer.get_abstractions()  # build_abstractions
+    for specific_zooming in sp_zooms:
+        sp_target_column = specific_zooming['target_column']
+        sp_source_column = specific_zooming['filter_column']
+        sp_filter_attribute = specific_zooming['filter_attribute']
+        sp_abstraction_function = specific_zooming['abstraction_function']
 
-    with open(f'{FILEPATH}/specific_zooms.json', 'r') as f:
-        try:
-            for specific_zooming in sp_zooms:
-                sp_target_column = specific_zooming['target_column']
-                sp_source_column = specific_zooming['filter_column']
-                sp_filter_attribute = specific_zooming['filter_attribute']
-                sp_abstraction_function = specific_zooming['abstraction_function']
+        clusterer = ABSTRACTION_OBJECTS.get(sp_target_column)
+        if clusterer is None:
+            logger.warning(f"Cannot find clusterer for column {sp_target_column} in COLUMN_ABSTRACTION_MAPPING. Continue")
+            continue
+        sp_abstraction = copy.deepcopy(clusterer.abstractions.get(sp_abstraction_function))
+        if sp_abstraction is None:
+            logger.warning(f"Cannot find abstraction function {sp_abstraction_function} for column {sp_target_column} in clusterer. Continue")
+            continue
+        """
+        sp_mask = specific_clusterer.build_mask(df_proc, sp_source_column, sp_filter_attribute)
+        sp_abstraction.set_mask(sp_mask)
+        """
+        sp_abstraction.set_mask_source_column(sp_source_column)
+        sp_abstraction.set_mask_filter_attribute(sp_filter_attribute)
+        # ADD new abstraction.
+        clusterer.add_specific_abstraction(sp_abstraction)
 
-                clusterer = ABSTRACTION_OBJECTS.get(sp_target_column)
-                if clusterer is None:
-                    logger.warning(f"Cannot find clusterer for column {sp_target_column} in COLUMN_ABSTRACTION_MAPPING. Continue")
-                    continue
-                sp_abstraction = copy.deepcopy(clusterer.abstractions.get(sp_abstraction_function))
-                if sp_abstraction is None:
-                    logger.warning(f"Cannot find abstraction function {sp_abstraction_function} for column {sp_target_column} in clusterer. Continue")
-                    continue
-
-                sp_mask = specific_clusterer.build_mask(df_proc, sp_source_column, sp_filter_attribute)
-                sp_abstraction.set_mask(sp_mask)
-                sp_abstraction.set_mask_source_column(sp_source_column)
-                # ADD new abstraction.
-                clusterer.add_specific_abstraction(sp_abstraction)
-        except JSONDecodeError as e:
-            logger.error(f"Error decoding specific_zooms.json: {e}")
 
     # Dependency detection
-    specific_clusterer.build_dependency_graph(abstractions)
+    cluster_order = specific_clusterer.build_dependency_graph(abstractions)
 
+    for cluster_aggr in cluster_order:
+        for cluster_obj, abstraction_list in cluster_aggr.items():
+            for abstraction in abstraction_list:
+                if abstraction.mask_filter_attribute is not None:
+                    sp_mask = specific_clusterer.build_mask(df_proc, abstraction.mask_source_col, abstraction.mask_filter_attribute)
+                    sp_abstraction.set_mask(sp_mask)
+            if not cluster_obj.check_columns(df_proc.columns):
+                logger.warning("Cannot Apply abstraction because source or target column is not in dataframe. Use default Abstraction")
+                cluster_obj.set_abstraction(None)
+            cluster_obj.calculate_masks()
+            df_proc = cluster_abstraction(df_proc, cluster_obj)
+
+    """
     for cluster_obj in abstractions:
         if not cluster_obj.check_columns(df_proc.columns):
             logger.warning("Cannot Apply abstraction because source or target column is not in dataframe. Use default Abstraction")
             cluster_obj.set_abstraction(None)
         cluster_obj.calculate_masks()
         df_proc = cluster_abstraction(df_proc, cluster_obj)
-
+    """
     logger.debug(df_proc.head())
     #df_proc = rename_cols_for_d3csv(df_proc)
     logger.debug("nach renaming")

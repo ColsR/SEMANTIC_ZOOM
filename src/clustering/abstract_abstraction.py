@@ -10,6 +10,7 @@ class AbstractAbstraction(ABC):
         self.ranking = ranking
         self.mask = None
         self.mask_source_col = None
+        self.mask_filter_attribute = None
 
     def apply_abstraction(self, value):
         return self.abstraction_function(value)
@@ -19,3 +20,6 @@ class AbstractAbstraction(ABC):
 
     def set_mask_source_column(self, mask_source_column):
         self.mask_source_col = mask_source_column
+
+    def set_mask_filter_attribute(self, mask_filter_attribute):
+        self.mask_filter_attribute = mask_filter_attribute
