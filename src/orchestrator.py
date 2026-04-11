@@ -26,7 +26,6 @@ from pathlib import Path
 
 from src.clustering import general_clusterer, specific_clusterer
 from src.clustering.general_clusterer import rename_abstraction, object_abstraction, cluster_abstraction
-from src.clustering.specific_clusterer import rename_exclusion
 from src.utils.data_processing import simplifyLog, relativeTimestamps
 from src.algo.global_ranking import global_ranking_of_eventdata
 from src.utils.data_processing import rename_cols_for_d3csv, convert_timecols_to_string
@@ -105,26 +104,6 @@ def process_log_for_d3js_abstractions(df, abstractions, sp_zooms):
     #df_proc = rename_cols_for_d3csv(df_proc)
     logger.debug("nach renaming")
     logger.debug(df_proc.head())
-    df_proc = convert_timecols_to_string(df_proc) # Convert Timedelta to string (JSON cannot handle Timedelta or Datetime)
-    df_proc = df_proc.fillna("nan") # In case some values are NaN, replace them with "nan" string for JSON compatibility
-    return df_proc
-
-def process_log_for_d3js_exclusions(df, exclusions):
-    """
-    Pre-process the event log for visualization in d3.js.
-    """
-    df_proc = df.copy()
-    # Process data
-    df_proc = simplifyLog(df_proc)
-    df_proc = relativeTimestamps(df_proc)
-
-    # Apply abstractions
-    for (column, filter_function) in exclusions:
-        df_proc = rename_exclusion(df_proc, column, time_clusterer.abstract_time_to_month, filter_function)
-    #print("AFTER")
-    #print(df_proc)
-    df_proc, _ = global_ranking_of_eventdata(df_proc)
-    df_proc = rename_cols_for_d3csv(df_proc)
     df_proc = convert_timecols_to_string(df_proc) # Convert Timedelta to string (JSON cannot handle Timedelta or Datetime)
     df_proc = df_proc.fillna("nan") # In case some values are NaN, replace them with "nan" string for JSON compatibility
     return df_proc
