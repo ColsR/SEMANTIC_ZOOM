@@ -63,6 +63,14 @@ class AbstractClusterer(ABC):
             self.std_abstraction_object = sel_func
             return True
 
+    def get_l_div(self):
+        colum_l_div_map = {}
+        colum_l_div_map.update(self.std_abstraction_object.get_l_div_map())
+        for sp_abstraction in self.sp_abstraction_objects:
+            colum_l_div_map.update(sp_abstraction.get_l_div_map())
+        return colum_l_div_map
+
+
     @abstractmethod
     def build_abstractions(self, col_name) -> dict:
         pass
