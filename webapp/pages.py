@@ -20,25 +20,25 @@ E-Mail: {firstname.lastname}@hu-berlin.de
 '''
 
 import csv
+import io
 import json
+import logging
+import os
 import shutil
 import sys
-import io
-import os
-import pandas as pd
 import tempfile
-from flask import Blueprint, render_template, request, jsonify
 from pathlib import Path
-import logging
 
-from src.algo.super_graph import build_super_graph
+from flask import Blueprint, render_template, request, jsonify
+
 # from src.analysis.attribute_extractor import AttributeExtractor
 import src.analysis.attribute_extractor as attribute_extractor
+from src.algo.super_graph import build_super_graph
 from src.analysis.data_extraction import get_occurring_entries
 from src.clustering import general_clusterer, numerical_clusterer
-from src.utils.data_exporting import export_event_log, export_event_log_custom
+from src.orchestrator import process_log_for_d3js_abstractions
+from src.utils.data_exporting import export_event_log_custom
 from src.utils.data_importing import load_event_log_from_tempfile
-from src.orchestrator import process_log_for_d3js, process_log_for_d3js_abstractions
 
 # App directory
 project_root = Path(__file__).resolve().parent.parent
@@ -122,38 +122,31 @@ def get_abstracted_data():
     requested_abstractions = data.get("abstractions")
     requested_sp_zooms = data.get("specific_zooms")
     logger.info(f"requested abstractions: {requested_abstractions}")
-    # print(f"FLAT Abstractions loading from {general_clusterer.get_abstractions()}") # build_abstractions
+
     ABSTRACTION_FUNCTIONS, FLAT_ABSTRACTION_FUNCTIONS, ABSTRACTIONS_OBJECTS, COlUMN_ABSTRACTION_MAPPING = general_clusterer.get_abstractions() # build_abstractions
-    # Mapping auf die Abstractions, hier müsste dann das mapping auf die Abstrkationsobjekte erfolgen, bzw. die korrekte Abstrkationsfunktion gesetzt werden
-    # man braucht die Spalte und kann sich damit das Abstrkationsobjekt ziehen, dann braucht man die Abstrkationsfunktion, um sie im Objekt zu setzen
-    # erstmal über das alte Mapping auch wenn hässlich, evtl API umbauen. Die column steht als target_column eigentlich in dem Clusterer-Objekt
-    #abstractions = [FLAT_ABSTRACTION_FUNCTIONS[abstraction] for abstraction in requested_abstractions if abstraction in FLAT_ABSTRACTION_FUNCTIONS.keys()]
     for cluster_obj in ABSTRACTIONS_OBJECTS.values():
-        cluster_obj.reset_specific_abstractions() # build specific abstractions everytime new
-    abstraction_objects = []
+        cluster_obj.reset_specific_abstractions() # build requested specific abstractions everytime new
+
+    requested_cluster = []
     for requested_abstraction in requested_abstractions:
-        #abstraction_obj = FLAT_ABSTRACTION_FUNCTIONS[requested_abstraction] if requested_abstraction in FLAT_ABSTRACTION_FUNCTIONS.keys() else None
-        #col_name = FLAT_ABSTRACTION_FUNCTIONS[requested_abstraction][0] if requested_abstraction in FLAT_ABSTRACTION_FUNCTIONS.keys() else None
         col_name = COlUMN_ABSTRACTION_MAPPING[requested_abstraction]
         if col_name is None:
             logger.warning("requested abstraction does not have a corresponding column in the log, skipping")
             continue
         cluster_obj = ABSTRACTIONS_OBJECTS[col_name]
         cluster_obj.set_abstraction(requested_abstraction)
-        abstraction_objects.append(cluster_obj)
-
-    #abstraction_objects = [(abstraction, ABSTRACTIONS_OBJECTS.get(FLAT_ABSTRACTION_FUNCTIONS[abstraction][0])) for abstraction in requested_abstractions if abstraction in FLAT_ABSTRACTION_FUNCTIONS.keys()]
-    # ich brauche aus dem FrontEnd die Info welche Abstraktion auf welche Spalte
-    #logger.info(f"abstractions: {abstractions}")
+        requested_cluster.append(cluster_obj)
 
     # Load the non-abstracted log from the temporary file created during upload
     df = load_event_log_from_tempfile(f"{FILEPATH}/persistent_log.xes")
     logger.debug("Loaded persistent log ")
     logger.debug(len(df))
     logger.debug(df.head())
-    df = process_log_for_d3js_abstractions(df, abstraction_objects, requested_sp_zooms)
+
+    # apply abstractions
+    df = process_log_for_d3js_abstractions(df, requested_cluster, requested_sp_zooms)
     logger.info("Processed log for d3js with abstractions")
-    df.head()
+
     # export the abstracted log to a csv and a xes file
     df_copy =df.copy()
     df_copy.to_csv(f"{FILEPATH}/volatile_working_csv.csv", index=False)
@@ -197,8 +190,6 @@ def get_available_abstractions_for_column(col_name):
     else:
         logger.warning(f"No abstraction found for column: {col_name}")
         return jsonify([])
-    #abstraction_keys = {attr : list(ABSTRACTION_FUNCTIONS[attr].keys()) for attr in ABSTRACTION_FUNCTIONS.keys()}
-    #return jsonify(abstraction_keys)
 
 
 @bp.route("/api/attributes")

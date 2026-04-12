@@ -12,7 +12,6 @@ class AbstractClusterer(ABC):
     def set_mask(self, mask):
         self.std_abstraction_object.set_mask(mask)
 
-
     def check_columns(self, col_names):
         if self.std_abstraction_object.source_col not in col_names or self.std_abstraction_object.target_col not in col_names:
             return False

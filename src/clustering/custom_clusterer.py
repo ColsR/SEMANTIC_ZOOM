@@ -1,10 +1,9 @@
 import json
-from pathlib import Path
 
 from src.clustering import instance_clusterer
 from src.clustering.abstract_abstraction import AbstractAbstraction
 from src.clustering.abstract_clusterer import AbstractClusterer
-from src.clustering.instance_clusterer import InstanceClusterer, InstanceAbstraction
+from src.clustering.instance_clusterer import InstanceAbstraction
 
 
 class CustomClusterer(AbstractClusterer):
@@ -29,16 +28,6 @@ class CustomClusterer(AbstractClusterer):
         clusterer_entries[f"custom{col_name}_not_abstracted"] = InstanceAbstraction(col_name, col_name, instance_clusterer.abstract_instance, 100)
         return clusterer_entries
 
-    """
-    def set_abstractions(self, abstraction_function):
-        sel_func = self.abstractions.get(abstraction_function)
-        if sel_func is None:
-            self.abstraction_object = InstanceAbstraction(self.col_name, self.col_name, instance_clusterer.abstract_instance_complete, 0)
-            return False
-        else:
-            self.abstraction_object = sel_func[1]
-            return True
-    """
 
 class CustomAbstraction(AbstractAbstraction):
     def __init__(self, source_col, target_col, abstraction_map, ranking=1):

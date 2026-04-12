@@ -14,17 +14,6 @@ class InstanceClusterer(AbstractClusterer):
         }
 
 
-    """
-    def set_abstractions(self, abstraction_function):
-        sel_func = self.abstractions.get(abstraction_function)  # TODO!
-        if sel_func is None:
-            self.abstraction_object = InstanceAbstraction(self.col_name, self.col_name, abstract_instance_complete, 0)
-            return False
-        else:
-            self.abstraction_object = sel_func[1]
-            return True
-    """
-
 class InstanceAbstraction(AbstractAbstraction):
     def __init__(self, source_col, target_col, abstraction_function, ranking=1):
         super().__init__(source_col, target_col, abstraction_function, ranking)

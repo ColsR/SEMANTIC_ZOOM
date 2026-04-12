@@ -19,17 +19,14 @@ Website: https://hu-berlin.de/rubensson
 E-Mail: {firstname.lastname}@hu-berlin.de
 '''
 import copy
-import json
 import logging
-from json import JSONDecodeError
 from pathlib import Path
 
-from src.clustering import general_clusterer, specific_clusterer
-from src.clustering.general_clusterer import rename_abstraction, object_abstraction, cluster_abstraction
-from src.utils.data_processing import simplifyLog, relativeTimestamps
 from src.algo.global_ranking import global_ranking_of_eventdata
+from src.clustering import general_clusterer, specific_clusterer
+from src.clustering.general_clusterer import cluster_abstraction
 from src.utils.data_processing import rename_cols_for_d3csv, convert_timecols_to_string
-import src.clustering.time_clusterer as time_clusterer
+from src.utils.data_processing import simplifyLog, relativeTimestamps
 
 logger = logging.getLogger(__name__)
 
@@ -50,7 +47,7 @@ def process_log_for_d3js(df):
     df_proc = df_proc.fillna("nan") # In case some values are NaN, replace them with "nan" string for JSON compatibility
     return df_proc
 
-def process_log_for_d3js_abstractions(df, abstractions, sp_zooms):
+def process_log_for_d3js_abstractions(df, requested_clusters, sp_zooms):
     """
     Pre-process the event log for visualization in d3.js.
     """
@@ -61,14 +58,12 @@ def process_log_for_d3js_abstractions(df, abstractions, sp_zooms):
     df_proc, _ = global_ranking_of_eventdata(df_proc)
 
 
-
-
+    # Mask for standard abstraction: abstract every entry
     standard_mask = [True] * len(df_proc)
-    for cluster_obj in abstractions:
+    for cluster_obj in requested_clusters:
         cluster_obj.set_mask(list(standard_mask.copy()))
 
-    # Specific Zooming
-    # TODO pass as parameter not loaded from file
+    # Specific Zooming - build abstraction object and set information for building their mask, but not build at this moment
     ABSTRACTION_FUNCTIONS, FLAT_ABSTRACTION_FUNCTIONS, ABSTRACTION_OBJECTS, COLUMN_ABSTRACTION_MAPPING = general_clusterer.get_abstractions()  # build_abstractions
     for specific_zooming in sp_zooms:
         sp_target_column = specific_zooming['target_column']
@@ -84,19 +79,17 @@ def process_log_for_d3js_abstractions(df, abstractions, sp_zooms):
         if sp_abstraction is None:
             logger.warning(f"Cannot find abstraction function {sp_abstraction_function} for column {sp_target_column} in clusterer. Continue")
             continue
-        """
-        sp_mask = specific_clusterer.build_mask(df_proc, sp_source_column, sp_filter_attribute)
-        sp_abstraction.set_mask(sp_mask)
-        """
+
         sp_abstraction.set_mask_source_column(sp_source_column)
         sp_abstraction.set_mask_filter_attribute(sp_filter_attribute)
         # ADD new abstraction.
         clusterer.add_specific_abstraction(sp_abstraction)
 
 
-    # Dependency detection
-    cluster_order = specific_clusterer.build_dependency_graph(abstractions)
+    # Dependency detection and get order for applying the cluster
+    cluster_order = specific_clusterer.build_dependency_graph(requested_clusters)
 
+    # build masks for specific abstractions and apply the clusterer
     for cluster_aggr in cluster_order:
         for cluster_obj, abstraction_list in cluster_aggr.items():
             for abstraction in abstraction_list:
@@ -109,14 +102,6 @@ def process_log_for_d3js_abstractions(df, abstractions, sp_zooms):
             cluster_obj.calculate_masks()
             df_proc = cluster_abstraction(df_proc, cluster_obj)
 
-    """
-    for cluster_obj in abstractions:
-        if not cluster_obj.check_columns(df_proc.columns):
-            logger.warning("Cannot Apply abstraction because source or target column is not in dataframe. Use default Abstraction")
-            cluster_obj.set_abstraction(None)
-        cluster_obj.calculate_masks()
-        df_proc = cluster_abstraction(df_proc, cluster_obj)
-    """
     logger.debug(df_proc.head())
     #df_proc = rename_cols_for_d3csv(df_proc)
     logger.debug("nach renaming")

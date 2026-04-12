@@ -1,13 +1,8 @@
 import logging
 from collections import defaultdict
-from pathlib import Path
 
-import pandas as pd
-import pm4py
-
-from src.clustering import time_clusterer
-import networkx as nx
 import matplotlib.pyplot as plt
+import networkx as nx
 
 logger = logging.getLogger(__name__)
 
