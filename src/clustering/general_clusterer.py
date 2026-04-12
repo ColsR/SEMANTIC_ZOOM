@@ -1,5 +1,3 @@
-import configparser
-import json
 import logging
 from pathlib import Path
 
@@ -16,27 +14,18 @@ logger = logging.getLogger(__name__)
 
 ABSTRACTION_FUNCTIONS = None
 FLAT_ABSTRACTION_FUNCTIONS = None
-ABSTRACTION_OBJECTS = None # hält für jede Spalte ein Abstraktionsobjekt, das alle Informationen für die Abstrkationen der Saplte hält
-COLUMN_ABSTRACTION_MAPPING = None # mapping Abstraktion auf Spalte
+ABSTRACTION_OBJECTS = None # mapping column name to clusterer object
+COLUMN_ABSTRACTION_MAPPING = None # mapping abstraction name to target column of this abstraction
 
-def general_abstraction(df, column, abstraction):
-    df[column + '_abstracted'] = df[column].apply(lambda x: abstraction(x))
-    return df
-
-def rename_abstraction(df, target_column, source_column, abstraction, mask):
-    if source_column not in df.columns or target_column not in df.columns:
-        logger.warning("Cannot Apply abstraction because source or target column is not in dataframe")
-        return df
-    df.loc[mask, target_column] = df.loc[mask, source_column].apply(lambda x : abstraction(x))
-    return df
-
-def object_abstraction(df, target_column, source_column, clusterer, mask):
+def cluster_abstraction(df, clusterer):
     if not clusterer.check_columns(df.columns):
         logger.error("Cannot Apply abstraction because source or target column is not in dataframe. Should be handled before")
         return df
-    df.loc[mask, target_column] = df.loc[mask, source_column].apply(lambda x: clusterer.apply_abstraction(x))
+    for abstraction_obj in clusterer.sp_abstraction_objects:
+        df.loc[abstraction_obj.mask, abstraction_obj.target_col] = df.loc[abstraction_obj.mask, abstraction_obj.source_col].apply(lambda x: abstraction_obj.apply_abstraction(x))
+    # default abstraction object
+    df.loc[clusterer.std_abstraction_object.mask, clusterer.std_abstraction_object.target_col] = df.loc[clusterer.std_abstraction_object.mask, clusterer.std_abstraction_object.source_col].apply(lambda x: clusterer.std_abstraction_object.apply_abstraction(x))
     return df
-
 
 def get_abstractions():
     global ABSTRACTION_FUNCTIONS, FLAT_ABSTRACTION_FUNCTIONS, ABSTRACTION_OBJECTS, COLUMN_ABSTRACTION_MAPPING
@@ -67,7 +56,7 @@ def build_abstractions():
     for custom_abstraction in custom_abstractions:
         col_name = custom_abstraction["col_name"]
         abstraction_map = custom_abstraction["abstractions"]
-        custom_cluster = CustomClusterer(col_name, None, abstraction_map)
+        custom_cluster = CustomClusterer(col_name, abstraction_map)
         abstraction_functions[f"custom{col_name}"] = custom_cluster.get_all()
         abstraction_objects[col_name] = custom_cluster
         custom_columns.add(col_name)
@@ -77,31 +66,31 @@ def build_abstractions():
             match attribute_type:
 
                 case attribute_extractor.ATTRIBUTE_TYPES.TIME:
-                    time_cluster = TimeClusterer(col_name, None)
+                    time_cluster = TimeClusterer(col_name)
                     abstraction_functions[f"time_{col_name}"] = time_cluster.get_all()
                     logger.debug({f"time_{col_name}" : time_cluster.get_all()})
                     abstraction_objects[col_name] = time_cluster
 
                 case attribute_extractor.ATTRIBUTE_TYPES.ACTIVITY:
-                    activity_cluster = ActivityClusterer(col_name, None)
+                    activity_cluster = ActivityClusterer(col_name)
                     abstraction_functions[f"activity_{col_name}"] = activity_cluster.get_all()
                     logger.debug({f"activity{col_name}" : activity_cluster.get_all()})
                     abstraction_objects[col_name] = activity_cluster
 
                 case attribute_extractor.ATTRIBUTE_TYPES.RESOURCE:
-                    resource_cluster = ResourceClusterer(col_name, None)
+                    resource_cluster = ResourceClusterer(col_name)
                     abstraction_functions[f"resource{col_name}"] = resource_cluster.get_all()
                     logger.debug({f"resource{col_name}" : resource_cluster.get_all()})
                     abstraction_objects[col_name] = resource_cluster
 
                 case attribute_extractor.ATTRIBUTE_TYPES.NUMERICAL:
-                    numerical_cluster = NumericalClusterer(col_name, None)
+                    numerical_cluster = NumericalClusterer(col_name)
                     abstraction_functions[f"numerical{col_name}"] = numerical_cluster.get_all()
                     logger.debug({f"numerical_{col_name}": numerical_cluster.get_all()})
                     abstraction_objects[col_name] = numerical_cluster
 
                 case _:
-                    instance_cluster = InstanceClusterer(col_name, None)
+                    instance_cluster = InstanceClusterer(col_name)
                     abstraction_functions[f"misc{col_name}"] = instance_cluster.get_all()
                     logger.debug("Not supported yet")
                     logger.debug({f"misc{col_name}" : instance_cluster.get_all()})
@@ -109,6 +98,6 @@ def build_abstractions():
 
     # flat_abstractions als mapping key: (col, obj?)
     flat_abstraction_functions = {k: v for group in abstraction_functions.values() for k, v in group.items()}
-    column_abstraction_mapping = {k: v[1].target_col for group in abstraction_functions.values() for k, v in group.items()}
+    column_abstraction_mapping = {k: v.target_col for group in abstraction_functions.values() for k, v in group.items()}
     logger.debug(f"Flat: {flat_abstraction_functions}")
     return abstraction_functions, flat_abstraction_functions, abstraction_objects, column_abstraction_mapping
