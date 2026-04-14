@@ -38,6 +38,12 @@ class TimeAbstraction(AbstractAbstraction):
     def __init__(self, source_col, target_col, abstraction_function, ranking=1):
         super().__init__(source_col, target_col, abstraction_function, ranking)
 
+    def apply_abstraction(self, value):
+        # timestamps raise problems with json
+        abstracted_value = self.abstraction_function(value)
+        self.l_div_map[str(abstracted_value)].add(str(value))
+        return abstracted_value
+
 
 def abstract_time_complete(timestamp):
     return pd.Timestamp(0, tz="UTC")

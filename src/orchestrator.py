@@ -19,8 +19,11 @@ Website: https://hu-berlin.de/rubensson
 E-Mail: {firstname.lastname}@hu-berlin.de
 '''
 import copy
+import json
 import logging
 from pathlib import Path
+
+import pandas as pd
 
 from src.algo.global_ranking import global_ranking_of_eventdata
 from src.clustering import general_clusterer, specific_clusterer
@@ -90,6 +93,8 @@ def process_log_for_d3js_abstractions(df, requested_clusters, sp_zooms):
     cluster_order = specific_clusterer.build_dependency_graph(requested_clusters)
 
     # build masks for specific abstractions and apply the clusterer
+    open(f"{str(FILEPATH)}/l_diversity.json", "w").close()
+    all_l_div_maps = {}
     for cluster_aggr in cluster_order:
         for cluster_obj, abstraction_list in cluster_aggr.items():
             for abstraction in abstraction_list:
@@ -101,6 +106,16 @@ def process_log_for_d3js_abstractions(df, requested_clusters, sp_zooms):
                 cluster_obj.set_abstraction(None)
             cluster_obj.calculate_masks()
             df_proc = cluster_abstraction(df_proc, cluster_obj)
+            l_div_map = cluster_obj.get_l_div()
+            all_l_div_maps.update({cluster_obj.col_name : l_div_map})
+    def serializer(obj):
+        if isinstance(obj, pd.Timestamp):
+            return str(obj.isoformat())
+        raise TypeError("Type not serializable")
+
+    with open(f"{str(FILEPATH)}/l_diversity.json", "a") as f:
+        json.dump(all_l_div_maps, f, default=serializer)
+
 
     logger.debug(df_proc.head())
     #df_proc = rename_cols_for_d3csv(df_proc)

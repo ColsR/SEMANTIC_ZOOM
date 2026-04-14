@@ -43,6 +43,7 @@ class NumericalAbstraction(AbstractAbstraction):
             logger.debug("number not to float castable")
         for split in self.bounds:  # TODO change to List?
             if split >= number:
+                self.l_div_map[split].add(number)
                 return split
         return None
 

@@ -35,7 +35,9 @@ class CustomAbstraction(AbstractAbstraction):
         self.abstraction_map = abstraction_map
 
     def apply_abstraction(self, value):
-        return self.abstraction_map.get(value, "*")
+        abstracted_value = self.abstraction_map.get(value, "*")
+        self.l_div_map[abstracted_value].add(value)
+        return abstracted_value
 
 # UTILS
 def load_custom_abstractions(config_path):
