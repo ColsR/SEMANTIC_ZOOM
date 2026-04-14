@@ -1,4 +1,7 @@
+import copy
 from abc import ABC, abstractmethod
+
+from src.clustering import specific_clusterer
 
 
 class AbstractClusterer(ABC):
@@ -20,12 +23,35 @@ class AbstractClusterer(ABC):
     def get_all(self):
         return self.abstractions
 
-    """
-    def apply_abstraction(self, value):
+    def apply_abstraction(self, df):
         # TODO die Logik wie in welcher Reihenfolge welche Abstraktionen ausgeführt werden ist egal
-        raise NotImplementedError("The method apply_abstraction is not implemented in the clusterer, but should be implemented in the abstractions")
-        # return self.abstraction_object.apply_abstraction(value)
-    """
+        # Masken neu berechnen, teilweise applien?
+        # Abstractions ranken
+        # Der Reihen nach Maske berechnen, setzen, applien, recalculate masks
+
+
+        abstractions_to_apply = self.sp_abstraction_objects.copy()
+        abstractions_to_apply.append(self.std_abstraction_object)
+        """
+        for abstraction_obj in abstractions_to_apply:
+            df.loc[abstraction_obj.mask, abstraction_obj.target_col] = df.loc[abstraction_obj.mask, abstraction_obj.source_col].apply(lambda x: abstraction_obj.apply_abstraction(x))
+        """
+
+        abstractions_to_apply.sort(key=lambda x: x.ranking)
+        df_unabstracted = copy.deepcopy(df)
+        for abstraction_obj in abstractions_to_apply:
+            if abstraction_obj.mask_filter_attribute is not None:
+                sp_mask = specific_clusterer.build_mask(df, abstraction_obj.mask_source_col, abstraction_obj.mask_filter_attribute)
+                abstraction_obj.set_mask(sp_mask)
+            self.calculate_masks()
+            df.loc[abstraction_obj.mask, abstraction_obj.target_col] = df_unabstracted.loc[abstraction_obj.mask, abstraction_obj.source_col].apply(lambda x: abstraction_obj.apply_abstraction(copy.deepcopy(x)))
+        """
+        for abstraction_obj in self.sp_abstraction_objects:
+            df.loc[abstraction_obj.mask, abstraction_obj.target_col] = df.loc[abstraction_obj.mask, abstraction_obj.source_col].apply(lambda x: abstraction_obj.apply_abstraction(x))
+        # default abstraction object
+        df.loc[self.std_abstraction_object.mask, self.std_abstraction_object.target_col] = df.loc[self.std_abstraction_object.mask, self.std_abstraction_object.source_col].apply(lambda x: self.std_abstraction_object.apply_abstraction(x))
+        """
+        return df
 
     def calculate_masks(self):
         # calculate the masks for all abstraction objects in this clusterer

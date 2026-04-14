@@ -27,7 +27,6 @@ import pandas as pd
 
 from src.algo.global_ranking import global_ranking_of_eventdata
 from src.clustering import general_clusterer, specific_clusterer
-from src.clustering.general_clusterer import cluster_abstraction
 from src.utils.data_processing import rename_cols_for_d3csv, convert_timecols_to_string
 from src.utils.data_processing import simplifyLog, relativeTimestamps
 
@@ -105,7 +104,9 @@ def process_log_for_d3js_abstractions(df, requested_clusters, sp_zooms):
                 logger.warning("Cannot Apply abstraction because source or target column is not in dataframe. Use default Abstraction")
                 cluster_obj.set_abstraction(None)
             cluster_obj.calculate_masks()
-            df_proc = cluster_abstraction(df_proc, cluster_obj)
+            # apply Abstraction:
+            df_proc = cluster_obj.apply_abstraction(df_proc)
+            # extract mapping abstracted_value -> original_value for l-diversity
             l_div_map = cluster_obj.get_l_div()
             all_l_div_maps.update({cluster_obj.col_name : l_div_map})
     def serializer(obj):
