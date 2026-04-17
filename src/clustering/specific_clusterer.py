@@ -1,13 +1,20 @@
+import copy
 import logging
 from collections import defaultdict
 
 import matplotlib.pyplot as plt
 import networkx as nx
+import pandas as pd
 
 logger = logging.getLogger(__name__)
 
 def build_mask(df, filter_source_column, filter_attribute):
-    filter_func = lambda x : x == filter_attribute
+    filter_func = lambda x : str(x) == filter_attribute
+    if isinstance(df[filter_source_column][0], pd.Timestamp):
+        filter_value = pd.to_datetime(filter_attribute, utc=True)
+        df_copy = copy.deepcopy(df)
+        mask = pd.to_datetime(df_copy[filter_source_column], utc=True) == filter_value
+        return mask.tolist()
     mask = df[filter_source_column].apply(filter_func)
     return mask.tolist()
 
@@ -91,12 +98,34 @@ def get_execution_layers(G):
         ready = [n for n in G.nodes if G.in_degree(n) == 0]
 
         if not ready:
-            raise ValueError("Zyklus erkannt!")
+            resolved = False
+            # check for intra Cluster cycle
+            cycles = list(nx.simple_cycles(G))
+            for cycle in cycles:
+               if is_intra_cluster_cycle(cycle):
+                   logger.debug(f"Cycle detected but it is an intra cluster cycle: {cycle}")
+                   layers.append(cycle)
+                   G.remove_nodes_from(cycle)
+                   resolved = True
+                   break
+            if not resolved:
+                raise ValueError("Cycle detected")
+            continue
 
+        # back in std case
         layers.append(ready)
         G.remove_nodes_from(ready)
 
     return layers
+
+def is_intra_cluster_cycle(cycle):
+    cols = set()
+
+    for node in cycle:
+        cols.add(node.source_col)
+        cols.add(node.target_col)
+
+    return len(cols) == 1
 
 
 

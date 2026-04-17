@@ -1,4 +1,7 @@
+import copy
 from abc import ABC, abstractmethod
+
+from src.clustering import specific_clusterer
 
 
 class AbstractClusterer(ABC):
@@ -20,12 +23,24 @@ class AbstractClusterer(ABC):
     def get_all(self):
         return self.abstractions
 
-    """
-    def apply_abstraction(self, value):
-        # TODO die Logik wie in welcher Reihenfolge welche Abstraktionen ausgeführt werden ist egal
-        raise NotImplementedError("The method apply_abstraction is not implemented in the clusterer, but should be implemented in the abstractions")
-        # return self.abstraction_object.apply_abstraction(value)
-    """
+    def apply_abstraction(self, df):
+        # Intra-Cluster-Ranking
+        # sort the abstractions by ranking attribute of their abstraction function
+        # apply the abstraction object with smallest rank and use the result to calculate the mask for the next abstraction object
+        # use the original df as input for every abstraction
+
+        abstractions_to_apply = self.sp_abstraction_objects.copy()
+        abstractions_to_apply.append(self.std_abstraction_object)
+
+        abstractions_to_apply.sort(key=lambda x: x.ranking)
+        df_unabstracted = copy.deepcopy(df)
+        for abstraction_obj in abstractions_to_apply:
+            if abstraction_obj.mask_filter_attribute is not None:
+                sp_mask = specific_clusterer.build_mask(df, abstraction_obj.mask_source_col, abstraction_obj.mask_filter_attribute)
+                abstraction_obj.set_mask(sp_mask)
+            self.calculate_masks()
+            df.loc[abstraction_obj.mask, abstraction_obj.target_col] = df_unabstracted.loc[abstraction_obj.mask, abstraction_obj.source_col].apply(lambda x: abstraction_obj.apply_abstraction(copy.deepcopy(x)))
+        return df
 
     def calculate_masks(self):
         # calculate the masks for all abstraction objects in this clusterer
@@ -34,7 +49,7 @@ class AbstractClusterer(ABC):
 
         if len(self.sp_abstraction_objects) == 0:
             return
-        self.sp_abstraction_objects.sort(key=lambda x: x.ranking)
+        self.sp_abstraction_objects.sort(key=lambda x: x.ranking, reverse=True)
         mask_len = len(self.std_abstraction_object.mask)
         for i in range(mask_len):
             set_mask = False
