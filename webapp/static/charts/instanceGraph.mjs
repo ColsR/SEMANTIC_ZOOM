@@ -38,6 +38,8 @@ async function renderInstanceGraph(graphData, link, container, xAccessor, xScale
         opacityGraph = 1,
         opacityStroke = 0.6,
         strokeWidth = 1.0,
+        xProject = (value) => xScale(value),
+        yProject = (value) => yScale(value),
     } = options;
 
 
@@ -57,7 +59,7 @@ async function renderInstanceGraph(graphData, link, container, xAccessor, xScale
         .attr('id', d => `edge-${d.id}`)
         .attr('d', link)
         .attr('class', d =>
-            yScale(d.source_coordinates[1]) > yScale(d.target_coordinates[1])
+            yProject(d.source_coordinates[1]) > yProject(d.target_coordinates[1])
                 ? classNameEdgeUp
                 : classNameEdgeDown
             );
@@ -81,8 +83,8 @@ async function renderInstanceGraph(graphData, link, container, xAccessor, xScale
         .data(nodes(graphData))
         .join('circle')
         .attr('id', d => `node-${d.id}`) // keys to find these elements
-        .attr('cx', d => xScale(xAccessor(d)))
-        .attr('cy', d => yScale(yAccessor(d)))
+        .attr('cx', d => xProject(xAccessor(d)))
+        .attr('cy', d => yProject(yAccessor(d)))
         .attr('r', 4)
         .attr('class', classNameNode)
         .on("mouseover", function(event, d) {

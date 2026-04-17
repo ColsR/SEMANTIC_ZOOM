@@ -40,14 +40,21 @@ const SCALE = (function () {
         .padding(1);
     }  
 
+
     function linear (domain, dimensions, { vertical = true } = {}) {
         const range = vertical 
             ? [dimensions.ctrHeight, 0]
             : [0, dimensions.ctrWidth];
+        //function scalewrapper()
         return d3.scaleLinear()
             .domain(domain)
-            .range(range);
+            .range(range)
+            .clamp(true);
+
+        //return scaleWrapper;
     }
+
+
 
     function timeUTC (domain, dimensions, { vertical = true } = {}) {
         const range = vertical 
