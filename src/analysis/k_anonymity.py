@@ -65,6 +65,40 @@ def count_unique_edges(log):
                 edge_count_map[edge] = 1
     return edge_count_map
 
+# trace edge and event k-anonymity interleaved to increase performance
+def get_k_anonymity(file_path):
+    edge_count_map = {}
+    event_count_map = {}
+    trace_count_map = {}
+    log = load_event_log(file_path)
+    for trace in log:
+        old_event = None
+        for event in trace:
+            # Event
+            event_hash = hash(event)
+            if event_hash in event_count_map:
+                event_count_map[event_hash] += 1
+            else:
+                event_count_map[event_hash] = 1
+            # Edges
+            if old_event is None:
+                old_event = event
+                continue
+            edge = (hash(old_event), event_hash)
+            if edge in edge_count_map:
+                edge_count_map[edge] += 1
+            else:
+                edge_count_map[edge] = 1
+        # Trace
+        trace_tuple = hash(trace_to_tuple(trace))
+        if trace_tuple in trace_count_map:
+            trace_count_map[trace_tuple] += 1
+        else:
+            trace_count_map[trace_tuple] = 1
+    return trace_count_map, edge_count_map, event_count_map
+
+
+
 
 def main():
     log = load_event_log(str(XES_VOLATILE_PATH))
@@ -79,6 +113,10 @@ def main():
     print("Unique edges and their counts:")
     edge_count_map = count_unique_edges(log)
     print(edge_count_map)
+    trace_count_map, edge_count_map, event_count_map = get_k_anonymity(str(XES_VOLATILE_PATH))
+    print(trace_count_map)
+    print(edge_count_map)
+    print(event_count_map)
 
 
 if __name__ == '__main__':

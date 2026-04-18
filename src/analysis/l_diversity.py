@@ -49,7 +49,8 @@ def get_l_diversity(log):
                 if column not in event_attribute_l_div_map[prev_event_hash].keys():
                     event_attribute_l_div_map[prev_event_hash][column] = set()
                 if event_attribute_l_div_map[prev_event_hash][column]:
-                    logger.debug(f"Already existing possible followers for {prev_event} and column {column}: {event_attribute_l_div_map[prev_event_hash][column]}")
+                    #logger.debug(f"Already existing possible followers for {prev_event} and column {column}: {event_attribute_l_div_map[prev_event_hash][column]}")
+                    pass
                 event_attribute_l_div_map[prev_event_hash][column] = event_attribute_l_div_map[prev_event_hash][column].union(possible_follower)
             prev_event = event
     return event_attribute_l_div_map
