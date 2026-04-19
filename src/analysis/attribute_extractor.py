@@ -71,6 +71,8 @@ def extract_attribute_type_mapping():
                 event_attribute_type_mapping.update({attr: ATTRIBUTE_TYPES.RESOURCE})
             case "concept:name":
                 event_attribute_type_mapping.update({attr: ATTRIBUTE_TYPES.ACTIVITY})
+            case "concept:name:ranked":
+                event_attribute_type_mapping.update({attr: ATTRIBUTE_TYPES.ACTIVITY})
             case "Costs":
                 event_attribute_type_mapping.update({attr: ATTRIBUTE_TYPES.NUMERICAL})
             case _:
