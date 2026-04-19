@@ -23,7 +23,7 @@ export function ABSTRACTEDMAP(csvdata, x_accessor=timeAccessor, y_accessor=actAc
     console.log("DATA is:" + data);
     console.log("Nodes are:" + nodes(data));
 
-    const isNumericalAccessor = (accessor) => ["number", "numerical", "numeric"].includes(accessor?.type);
+    const isNumericalAccessor = (accessor) => ["number", "numerical", "numeric", "relativetime"].includes(accessor?.type);
     const getFiniteNumericValues = (accessor) => nodes(data)
         .map((d) => +accessor(d))
         .filter(Number.isFinite);

@@ -33,12 +33,14 @@ from flask import Blueprint, render_template, request, jsonify
 
 # from src.analysis.attribute_extractor import AttributeExtractor
 import src.analysis.attribute_extractor as attribute_extractor
+from src.algo.global_ranking import global_ranking_of_eventdata
 from src.algo.super_graph import build_super_graph
 from src.analysis.data_extraction import get_occurring_entries
 from src.clustering import general_clusterer, numerical_clusterer
 from src.orchestrator import process_log_for_d3js_abstractions
 from src.utils.data_exporting import export_event_log_custom
 from src.utils.data_importing import load_event_log_from_tempfile
+from src.utils.data_processing import simplifyLog, relativeTimestamps
 
 # App directory
 project_root = Path(__file__).resolve().parent.parent
@@ -100,12 +102,25 @@ def upload_data():
             shutil.copy(tmp_path, f"{FILEPATH}/persistent_log.xes")
             # attribute_extractor = AttributeExtractor(tmp_path)
             general_clusterer.reset_abstractions()
+            # TODO artifical Attributes need to be extracted as well -> calculate them or hardcode them?
+            # Probably calculate them and extract them as well, since they might be used for abstraction as well
+            # TODO call get_abstracted_data here with hardcoded? abstractions set to get the Working_Volatile_XES for extraction of attributes and columns
+            # Maybe write this stuff in the persisten_log.xes? -> so extract and write them in the data and then they can be used always -> probably best solution
+            df = load_event_log_from_tempfile(tmp_path)
+            df = simplifyLog(df)
+            df = relativeTimestamps(df)
+            df, _ = global_ranking_of_eventdata(df)
+            export_event_log_custom(df, tmp_path)
+
             attribute_extractor.extract_attributes(tmp_path)
             attribute_extractor.extract_attribute_type_mapping()
             attribute_extractor.write_to_file()
+
+
+
             logger.info(f"Extracted trace attributes: {attribute_extractor.trace_attributes}")
             logger.info(f"Extracted event attributes: {attribute_extractor.event_attributes}")
-            df = load_event_log_from_tempfile(f"{FILEPATH}/persistent_log.xes")
+
             numerical_clusterer.build_abstractions(df)
             general_clusterer.get_abstractions() # build_abstractions
             # Clean up temporary file
