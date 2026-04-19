@@ -1,10 +1,13 @@
 import json
 import logging
+import math
 import sys
 from collections import defaultdict
 from datetime import datetime
+from math import nan
 from pathlib import Path
 
+import pandas as pd
 from pm4py.objects.log.importer.xes import importer as xes_importer
 from enum import Enum
 
@@ -21,6 +24,7 @@ class ATTRIBUTE_TYPES(str, Enum):
     RESOURCE = "resource"
     STRING = "string"
     NUMERICAL = "numerical"
+    RELATIVE_TIME = "relativetime"
 
 
 trace_attributes = set()
@@ -47,6 +51,8 @@ def extract_attributes(file_path):
         for event in trace:
             event_attributes.update(event.keys())
             for key, value in event.items():
+                if pd.isna(value):
+                    continue
                 event_attributes_types[key].add(type(value).__name__)
 
     logger.info(f"event_attributes_types: {event_attributes_types}")
@@ -59,6 +65,8 @@ def extract_attribute_type_mapping():
         match attr:
             case "time:timestamp":
                 event_attribute_type_mapping.update({attr: ATTRIBUTE_TYPES.TIME})
+            case "time:timestamp:relative":
+                event_attribute_type_mapping.update({attr: ATTRIBUTE_TYPES.RELATIVE_TIME})
             case "org:resource":
                 event_attribute_type_mapping.update({attr: ATTRIBUTE_TYPES.RESOURCE})
             case "concept:name":

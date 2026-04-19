@@ -7,6 +7,7 @@ from src.clustering.activity_clusterer import ActivityClusterer
 from src.clustering.custom_clusterer import CustomClusterer
 from src.clustering.instance_clusterer import InstanceClusterer
 from src.clustering.numerical_clusterer import NumericalClusterer
+from src.clustering.relative_time_clusterer import RelativeTimeClusterer
 from src.clustering.resource_clusterer import ResourceClusterer
 from src.clustering.time_clusterer import TimeClusterer
 
@@ -58,8 +59,14 @@ def build_abstractions():
 
                 case attribute_extractor.ATTRIBUTE_TYPES.TIME:
                     time_cluster = TimeClusterer(col_name)
-                    abstraction_functions[f"time_{col_name}"] = time_cluster.get_all()
-                    logger.debug({f"time_{col_name}" : time_cluster.get_all()})
+                    abstraction_functions[f"time{col_name}"] = time_cluster.get_all()
+                    logger.debug({f"time{col_name}" : time_cluster.get_all()})
+                    abstraction_objects[col_name] = time_cluster
+
+                case attribute_extractor.ATTRIBUTE_TYPES.RELATIVE_TIME:
+                    time_cluster = RelativeTimeClusterer(col_name)
+                    abstraction_functions[f"relativetime{col_name}"] = time_cluster.get_all()
+                    logger.debug({f"relativetime{col_name}": time_cluster.get_all()})
                     abstraction_objects[col_name] = time_cluster
 
                 case attribute_extractor.ATTRIBUTE_TYPES.ACTIVITY:

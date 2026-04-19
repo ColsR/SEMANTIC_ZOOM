@@ -11,7 +11,8 @@ const buildAccessors = (schema) => {
       fn = (d) => parseDate(d[key]);
     } else if (type === "number") {
       fn = (d) => +d[key];
-    } else {
+    }
+    else {
       fn = (d) => d[key];
     }
     fn.type = type;
