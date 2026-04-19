@@ -71,7 +71,7 @@ def build_abstractions():
 
                 case attribute_extractor.ATTRIBUTE_TYPES.ACTIVITY:
                     activity_cluster = ActivityClusterer(col_name)
-                    abstraction_functions[f"activity_{col_name}"] = activity_cluster.get_all()
+                    abstraction_functions[f"activity{col_name}"] = activity_cluster.get_all()
                     logger.debug({f"activity{col_name}" : activity_cluster.get_all()})
                     abstraction_objects[col_name] = activity_cluster
 
