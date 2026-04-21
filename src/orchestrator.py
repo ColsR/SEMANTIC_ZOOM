@@ -21,6 +21,7 @@ E-Mail: {firstname.lastname}@hu-berlin.de
 import copy
 import json
 import logging
+from datetime import datetime, timedelta
 from pathlib import Path
 
 import pandas as pd
@@ -112,6 +113,10 @@ def process_log_for_d3js_abstractions(df, requested_clusters, sp_zooms):
     def serializer(obj):
         if isinstance(obj, pd.Timestamp):
             return str(obj.isoformat())
+        if isinstance(obj, pd.Timedelta):
+            return str(obj)
+        if isinstance(obj, timedelta):
+            return str(obj)
         raise TypeError("Type not serializable")
 
     with open(f"{str(FILEPATH)}/l_diversity.json", "a") as f:

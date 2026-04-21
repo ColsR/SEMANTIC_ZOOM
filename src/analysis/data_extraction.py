@@ -1,7 +1,7 @@
 import logging
 from pathlib import Path
 
-from src.analysis.k_anonymity import load_event_log
+from src.analysis.privacy.k_anonymity import load_event_log
 
 logger = logging.getLogger(__name__)
 

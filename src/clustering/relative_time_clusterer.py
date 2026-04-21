@@ -45,21 +45,16 @@ class RelativeTimeAbstraction(AbstractAbstraction):
 
 
 def abstract_time_complete(timedelta):
-    return pd.Timedelta(0)
+    return 0
 
 def abstract_time_to_week(td):
-    weeks = td.days // 7
-    return datetime.timedelta(weeks=weeks)
+    return td // 604800
 
 def abstract_time_to_day(timedelta):
-    return datetime.timedelta(timedelta.days)
+    return timedelta // 86400
 
 def abstract_time_to_hour(td):
-    total_seconds = td.total_seconds()
-    hours = int(total_seconds // 3600)
-    return datetime.timedelta(hours=hours)
+    return td // 3600
 
 def abstract_time_to_minute(td):
-    total_seconds = td.total_seconds()
-    minutes = int(total_seconds // 60)
-    return datetime.timedelta(minutes=minutes)
+    return td // 60

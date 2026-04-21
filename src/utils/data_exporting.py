@@ -46,9 +46,8 @@ def export_event_log_custom(df, file_path):
         df["time:timestamp"] = pd.to_datetime(df["time:timestamp"])
         # TODO remove this probably later because these columns will not be present anymore
         #df.drop(columns=["time:timestamp:casestart", "time:timestamp:relative", "timestamp_relative_seconds", "time:relative:seconds:log", "ranks", "activity", "concept:name:ranked", "time:relative:seconds"], inplace=True, errors="ignore")
-        df.drop(columns=["time:timestamp:casestart", "timestamp_relative_seconds",
-                         "time:relative:seconds:log", "ranks", "activity",
-                         "time:relative:seconds"], inplace=True, errors="ignore")
+        # df.drop(columns=["time:timestamp:casestart", "timestamp_relative_seconds", "time:relative:seconds:log", "ranks", "activity", "time:relative:seconds"], inplace=True, errors="ignore")
+        df.drop(columns=["time:timestamp:casestart", "timestamp_relative_seconds", "time:relative:seconds:log", "ranks", "activity", "time:timestamp:relative"], inplace=True, errors="ignore")
         #df.rename(columns={"timestamps": "time:timestamp"}, inplace=True)
         #df = df.rename(columns={"timestamps": "time:timestamp"})
         logger.debug("Exporting xes event log...")

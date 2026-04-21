@@ -3,7 +3,7 @@ from pathlib import Path
 import pm4py.objects.log.importer.xes.importer as xes_importer
 
 
-project_root = Path(__file__).parent.parent.parent
+project_root = Path(__file__).parent.parent.parent.parent
 
 XES_VOLATILE_PATH = project_root / 'data' / 'working_data' / 'volatile_working_xes.xes'
 
@@ -27,7 +27,8 @@ def trace_to_tuple(trace):
 
 
 # k-anonymity at trace level -> get all events of the trace in a tuple, hash them and use them as key
-def count_unique_traces(log):
+def count_unique_traces(file_path:str):
+    log =load_event_log(file_path)
     trace_count_map = {}
     for trace in log:
         trace_tuple = hash(trace_to_tuple(trace))
@@ -38,7 +39,8 @@ def count_unique_traces(log):
     return trace_count_map
 
 # k-anonymity at event level -> check event attributes, hash them and use them as key
-def count_unique_events(log):
+def count_unique_events(file_path:str):
+    log =load_event_log(file_path)
     event_count_map = {}
     for trace in log:
         for event in trace:
@@ -50,7 +52,8 @@ def count_unique_events(log):
     return event_count_map
 
 # k-anonymity at edge level -> check traces and two events that follow each other, hash this edge and use them as key
-def count_unique_edges(log):
+def count_unique_edges(file_path:str):
+    log =load_event_log(file_path)
     edge_count_map = {}
     for trace in log:
         old_event = None

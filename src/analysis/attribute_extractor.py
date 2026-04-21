@@ -65,7 +65,7 @@ def extract_attribute_type_mapping():
         match attr:
             case "time:timestamp":
                 event_attribute_type_mapping.update({attr: ATTRIBUTE_TYPES.TIME})
-            case "time:timestamp:relative":
+            case "time:relative:seconds":
                 event_attribute_type_mapping.update({attr: ATTRIBUTE_TYPES.RELATIVE_TIME})
             case "org:resource":
                 event_attribute_type_mapping.update({attr: ATTRIBUTE_TYPES.RESOURCE})
