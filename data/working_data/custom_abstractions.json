@@ -1,0 +1,49 @@
+[
+  {
+    "col_name": "concept:name",
+    "abstractions": {
+      "level1": {
+        "hierarchy": {
+          "checking": [
+            "register request",
+            "examine casually",
+            "examine thoroughly",
+            "check ticket",
+            "check"
+          ],
+          "decision": [
+            "decide",
+            "reinitiate request",
+            "reject request",
+            "pay compensation"
+          ]
+        },
+        "ranking": 1
+      },
+      "level2": {
+        "hierarchy": {
+          "register request": [
+            "register request"
+          ],
+          "examine": [
+            "examine casually",
+            "examine thoroughly"
+          ],
+          "check": [
+            "check ticket",
+            "check"
+          ],
+          "decision enforcing": [
+            "decide",
+            "reinitiate request",
+            "reject request"
+          ],
+          "pay compensation": [
+            "pay compensation"
+          ]
+        },
+        "ranking": 2
+      }
+    }
+  }
+]
