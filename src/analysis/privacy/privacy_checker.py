@@ -12,10 +12,58 @@ from pathlib import Path
 import pm4py
 from pm4py.objects.log.obj import EventLog
 
-from src.analysis.k_anonymity import get_k_anonymity, load_event_log, trace_to_tuple
-from src.analysis.l_diversity import get_l_diversity, calc_l_div
+from src.analysis.privacy.k_anonymity import get_k_anonymity, load_event_log, trace_to_tuple, count_unique_traces, \
+    count_unique_events, count_unique_edges
+from src.analysis.privacy.l_diversity import get_l_diversity, calc_l_div
 
 logger = logging.getLogger(__name__)
+
+def check_metrics(xes_path, k_trace=-1, k_event=-1, k_edge=-1, l_div=-1) -> bool:
+    print("Checking privacy metrics for the log...")
+    if k_trace > 0 and k_event > 0 and k_edge > 0:
+        trace_count_map, edge_count_map, event_count_map = get_k_anonymity(xes_path)
+        for k_trace_value in trace_count_map.values():
+            if k_trace_value < k_trace:
+                return False
+        for k_event_value in edge_count_map.values():
+            if k_event_value < k_event:
+                return False
+        for k_edge_value in event_count_map.values():
+            if k_edge_value < k_edge:
+                return False
+    else:
+        if k_trace > 0:
+            trace_count_map = count_unique_traces(xes_path)
+            for k_trace_value in trace_count_map.values():
+                if k_trace_value < k_trace:
+                    return False
+        if k_event > 0:
+            event_count_map = count_unique_events(xes_path)
+            for k_event_value in event_count_map.values():
+                if k_event_value < k_event:
+                    return False
+        if k_edge > 0:
+            edge_count_map = count_unique_edges(xes_path)
+            for k_edge_value in edge_count_map.values():
+                if k_edge_value < k_edge:
+                    return False
+
+
+    if l_div > 0:
+        div_map = get_l_diversity(xes_path)
+        l_div_counts = calc_l_div(div_map)
+        for event_hash, l_div_values in l_div_counts.items():
+            for _, l_div_val in l_div_values.items():
+                if l_div_val < l_div:
+                    return False
+
+    return True
+
+
+
+
+
+
 
 def delete_trace(xes_path, min_k_trace=-1, min_k_event=-1, min_k_edge=-1, min_l_event=-1):
     privacy_reached = False
@@ -147,7 +195,7 @@ def check_empty_log(XES_PATH):
 def main():
     if __debug__:
         logging.basicConfig(level=logging.DEBUG)
-    project_root = Path(__file__).parent.parent.parent
+    project_root = Path(__file__).parent.parent.parent.parent
 
     XES_VOLATILE_PATH = project_root / 'data' / 'working_data' / 'volatile_working_xes.xes'
     delete_trace(str(XES_VOLATILE_PATH), min_k_event=3, min_k_edge=3, min_l_event=2)

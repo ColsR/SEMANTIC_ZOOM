@@ -23,7 +23,6 @@ import csv
 import io
 import json
 import logging
-import os
 import shutil
 import sys
 import tempfile
@@ -36,11 +35,15 @@ import src.analysis.attribute_extractor as attribute_extractor
 from src.algo.global_ranking import global_ranking_of_eventdata
 from src.algo.super_graph import build_super_graph
 from src.analysis.data_extraction import get_occurring_entries
+from src.analysis.privacy.privacy_checker import delete_trace, check_metrics
 from src.clustering import general_clusterer, numerical_clusterer
 from src.orchestrator import process_log_for_d3js_abstractions
 from src.utils.data_exporting import export_event_log_custom
 from src.utils.data_importing import load_event_log_from_tempfile
 from src.utils.data_processing import simplifyLog, relativeTimestamps
+
+import os
+from dotenv import load_dotenv
 
 # App directory
 project_root = Path(__file__).resolve().parent.parent
@@ -54,6 +57,21 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 bp = Blueprint("pages", __name__)
+
+config = {}
+
+def load_config():
+    global config
+    load_dotenv()
+    config["K_EVENT"] = int(os.getenv("K_EVENT"))
+    config["K_EDGE"] = int(os.getenv("K_EDGE"))
+    config["K_TRACE"] = int(os.getenv("K_TRACE"))
+    config["L_DIV"] = int(os.getenv("L_DIV"))
+
+    config["DELETE_TRACES"] = os.getenv("DELETE_TRACES") == "True"
+    config["ENFORCE_PRIVACY"] = os.getenv("ENFORCE_PRIVACY") == "True"
+
+
 
 
 FILEPATH = project_root / 'data' / 'working_data'
@@ -76,6 +94,7 @@ def get_data():
 
 @bp.route('/api/upload_data', methods=['POST'])
 def upload_data():
+    load_config()
     if 'file' not in request.files:
         return jsonify({'error': 'No file uploaded'}), 400
 
@@ -181,6 +200,24 @@ def get_abstracted_data():
 
     except Exception as e:
         logger.error(f"Error exporting event log: {e}")
+        raise RuntimeError(f"Error exporting event log: {e}")
+
+
+    # Check Privacy:
+    global config
+    xes_path = f"{FILEPATH}/volatile_working_xes.xes"
+    if config.get("ENFORCE_PRIVACY", False):
+        logger.debug("Enforcing privacy on working XES")
+
+        if config.get("DELETE_TRACES", False):
+            logger.debug("Deleting traces to enforce privacy")
+            delete_trace(f"{FILEPATH}/volatile_working_xes.xes", config.get("K_TRACE", -1), config.get("K_EVENT", -1), config.get("K_EDGE", -1), config.get("L_DIV", 1))
+        else:
+            logger.debug("Check Privacy without deleting")
+            privacy_matched =  check_metrics(xes_path, config.get("K_TRACE", -1), config.get("K_EVENT", -1), config.get("K_EDGE", -1), config.get("L_DIV", -1))
+            if not privacy_matched:
+                logger.info("Privacy Metrics not satisfied, don't return event-log to the FrontEnd")
+                return None
 
     # Build the super nodes and super edges
     super_df = build_super_graph(df)

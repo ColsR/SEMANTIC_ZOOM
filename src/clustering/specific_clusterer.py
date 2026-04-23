@@ -60,7 +60,7 @@ def build_dependency_graph(abstractions):
         arrows=True
     )
 
-    plt.show()
+    # plt.show()
 
     if not nx.is_directed_acyclic_graph(G):
         logger.warning("The graph is not directed acyclic")

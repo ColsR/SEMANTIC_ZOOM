@@ -18,9 +18,9 @@ from collections import defaultdict
 from datetime import datetime
 from pathlib import Path
 
-from src.analysis.k_anonymity import load_event_log
+from src.analysis.privacy.k_anonymity import load_event_log
 
-project_root = Path(__file__).parent.parent.parent
+project_root = Path(__file__).parent.parent.parent.parent
 
 XES_VOLATILE_PATH = project_root / 'data' / 'working_data' / 'volatile_working_xes.xes'
 L_DIVERSITY_PATH = project_root / 'data' / 'working_data' / 'l_diversity.json'
@@ -32,7 +32,8 @@ def load_l_diversity_map(file_path):
         return json.load(open(str(L_DIVERSITY_PATH), 'r'))
 
 
-def get_l_diversity(log):
+def get_l_diversity(file_path:str):
+    log = load_event_log(str(file_path))
     event_attribute_l_div_map = defaultdict(dict)
     l_diversity_map = load_l_diversity_map(str(L_DIVERSITY_PATH))
     for trace in log:
@@ -43,8 +44,7 @@ def get_l_diversity(log):
                 continue
             prev_event_hash = hash(prev_event)
             for column, abstracted_value in event.items():
-                if isinstance(abstracted_value, datetime):
-                    abstracted_value = str(abstracted_value)
+                abstracted_value = str(abstracted_value)
                 possible_follower = l_diversity_map[column][abstracted_value]
                 if column not in event_attribute_l_div_map[prev_event_hash].keys():
                     event_attribute_l_div_map[prev_event_hash][column] = set()
@@ -60,9 +60,9 @@ def calc_l_div(event_attribute_l_div_map):
         for column, possible_follower in column_follower_map.items():
             column_follower_map[column] = len(column_follower_map[column])
     return event_attribute_l_div_map
+
 def main():
-    log = load_event_log(str(XES_VOLATILE_PATH))
-    trace_count_map = get_l_diversity(log)
+    trace_count_map = get_l_diversity(str(XES_VOLATILE_PATH))
     print("Unique traces and their counts:")
     print(trace_count_map)
     l_div_counts = calc_l_div(trace_count_map)
