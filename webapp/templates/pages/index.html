@@ -60,16 +60,34 @@
   <div id="main-layout">
       <!-- Graph and slider-->
       <div id="graph-section">
-        <div id="chart"></div>
-        <div class="slider-abstraction">
-          <div class="slider-abstraction-container">
-            <input type="range" id="slider-abstraction-level" name="abstraction-level"/>
-          </div>
-          <label for="slider-abstraction-level">
-            Abstraction level: 
-            <span id="slider-abstraction-level-value">0</span>
-          </label>
+          <div class="main-config">
+            <div class="param-group">
+            <div>
+                <h3>Axis</h3>
+            </div>
+                <label>Y-Axis</label>
+                <select name="y-axis" id="y-axis-select">
+                    <option value="resource">Resource</option>
+                    <option value="activity">Activity</option>
+                </select>
+                <label>X-Axis</label>
+                <select name="x-axis" id="x-axis-select">
+                    <option value="time">Time</option>
+                    <option value="activity">Activity</option>
+                </select>
+            </div>
         </div>
+        <div id="chart"></div>
+          <div class="main-config">
+              <div class="param-group">
+              <div id="specific_zoom-container"></div>
+              <div id="specific_zoom-filter-container"></div>
+              <div id="specific_zoom-abstraction-container"></div>
+              <button id="specific-zoom-submit">Submit</button>
+              <ul id="specific-zoom-list"></ul>
+          </div>
+              </div>
+
       </div>
 
       <!-- Graph parameters --> 
@@ -91,63 +109,7 @@
         </div>-->
 
         <div id="parameters-graph">
-          <h3>Element transitions:</h3>
-          <div class="param-group">
-            <div class="option-switcher" id="toggle-group-opacity">
-              <input type="radio" name="option-switcher-value" id="level-low" value="0" checked>
-              <label for="level-low">Off</label>
-
-              <input type="radio" name="option-switcher-value" id="level-mid" value="1">
-              <label for="level-mid">Edges</label>
-
-              <input type="radio" name="option-switcher-value" id="level-high" value="2">
-              <label for="level-high">Graph</label>
-              <i>Gradual change in opacity for instance elements.</i>
-            </div>
-            <div class="checkbox-row">
-              <input type="checkbox" id="toggle-instance-element-rendering" />
-              <label>Enable instance element rendering.</label>
-            </div>
-            <div class="checkbox-row">
-              <input type="checkbox" id="toggle-dfg-graph" />
-              <label>Show/Hide activities.</label>
-            </div>
-          </div>
-            <div class="param-group">
-                <h3>Axis</h3>
-                <label>Y-Axis</label>
-                <select name="y-axis" id="y-axis-select">
-                    <option value="resource">Resource</option>
-                    <option value="activity">Activity</option>
-                </select>
-                <label>X-Axis</label>
-                <select name="x-axis" id="x-axis-select">
-                    <option value="time">Time</option>
-                    <option value="activity">Activity</option>
-                </select>
-            </div>
-          <div class="param-group">
-            <h3>Contour lines:</h3>
-
-            <div class="slider-row">
-              <label>Bandwidth:</label>
-              <input type="range" id="contour-bandwidth-slider" min="10" max="200" step="10" value="60">
-              <span id="contour-bandwidth-value">60</span>
-            </div>
-
-            <div class="slider-row">
-              <label>Thresholds:</label>
-              <input type="range" id="contour-threshold-slider" min="1" max="10" step="1" value="3">
-              <span id="contour-threshold-value">3</span>
-            </div>
-
-            <div class="checkbox-row">
-              <input type="checkbox" id="toggle-contour-lines" />
-              <label>Show/Hide contour lines.</label>
-            </div>
-            <button id="button-update-abstraction-graph">Update Graph</button>
-            <div id="graph-update-status" style="margin-top: 10px; font-style: italic;"></div>
-          </div>
+          <h3>Base Abstractions:</h3>
             <!-- dynamic Abstractions -->
             <div id="abstractions-container"></div>
         </div>
@@ -166,11 +128,6 @@
             <button id="button-export">Export SVG</button>
           </div>
         </div>
-          <div id="specific_zoom-container"></div>
-          <div id="specific_zoom-filter-container"></div>
-          <div id="specific_zoom-abstraction-container"></div>
-          <button id="specific-zoom-submit">Submit</button>
-          <ul id="specific-zoom-list"></ul>
       </div>
 
   </div>

@@ -421,3 +421,13 @@ h3 {
     opacity: 1;
     transition: opacity 0.2s ease;
 }
+
+.axis-container {
+  display: flex;
+  align-items: center;
+}
+
+.main-config {
+  display: flex;
+  align-items: center;
+}
