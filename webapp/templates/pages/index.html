@@ -32,6 +32,30 @@
 </head>
 
 <body>
+<div id="setup-bar" class="expanded">
+    <div id="setup-expanded">
+        <div class="import-section">
+        <h3>Data Import & Attributes</h3>
+        <h3>Import:</h3>
+          <div class="param-group">
+            <form id="upload-form" enctype="multipart/form-data">
+              <input type="file" id="file-input" name="file" accept=".csv, .xes" />
+              <button type="button-import" id="button-import">Import Event Log</button>
+            </form>
+          </div>
+        </div>
+        <div class="attribute-section">
+            <h3>Attributes</h3>
+            <div id="attribute-container"></div>
+        </div>
+        <button id="collapse-setup">Finish Configuration</button>
+    </div>
+
+    <div id="setup-collapsed">
+        <span id="file-name">No File set</span>
+        <button id="edit-setup">Edit</button>
+    </div>
+</div>
   <center><h1>Time-Order Map for Seamless Zooming</h1></center>
   <div id="main-layout">
       <!-- Graph and slider-->
@@ -131,13 +155,6 @@
 
         <!-- Import/Export parameters --> 
         <div id="parameters-import">
-          <h3>Import:</h3>
-          <div class="param-group">
-            <form id="upload-form" enctype="multipart/form-data">
-              <input type="file" id="file-input" name="file" accept=".csv, .xes" />
-              <button type="button-import" id="button-import">Import Event Log</button>
-            </form>
-          </div>
 
           <div class="param-group">
             <button id="button-reset">Reset to Example Log</button>
@@ -149,16 +166,12 @@
             <button id="button-export">Export SVG</button>
           </div>
         </div>
-          <div id="attribute-container"></div>
           <div id="specific_zoom-container"></div>
           <div id="specific_zoom-filter-container"></div>
           <div id="specific_zoom-abstraction-container"></div>
           <button id="specific-zoom-submit">Submit</button>
           <ul id="specific-zoom-list"></ul>
       </div>
-
-
-
 
   </div>
   

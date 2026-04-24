@@ -1,3 +1,39 @@
+
+/*Setup-Bar*/
+#setup-bar {
+  border-bottom: 1px solid #ccc;
+  background: #f5f5f5;
+  padding: 10px;
+}
+
+#setup-expanded {
+  display: flex;
+  align-items: flex-start;
+  gap: 250px;
+}
+
+#setup-collapsed {
+  display: none;
+}
+
+#setup-bar.collapsed #setup-expanded {
+  display: none;
+}
+
+#setup-bar.collapsed #setup-collapsed {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.import-section {
+  flex: 1;
+}
+
+.attribute-section {
+  margin-left: auto;
+}
+
 #main-layout {
   display: flex;
   flex-direction: column;
