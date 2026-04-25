@@ -39,7 +39,8 @@ class AbstractClusterer(ABC):
                 sp_mask = specific_clusterer.build_mask(df, abstraction_obj.mask_source_col, abstraction_obj.mask_filter_attribute)
                 abstraction_obj.set_mask(sp_mask)
             self.calculate_masks()
-            df.loc[abstraction_obj.mask, abstraction_obj.target_col] = df_unabstracted.loc[abstraction_obj.mask, abstraction_obj.source_col].apply(lambda x: abstraction_obj.apply_abstraction(copy.deepcopy(x)))
+            if abstraction_obj.source_col in df_unabstracted.columns and abstraction_obj.target_col in df.columns:
+                df.loc[abstraction_obj.mask, abstraction_obj.target_col] = df_unabstracted.loc[abstraction_obj.mask, abstraction_obj.source_col].apply(lambda x: abstraction_obj.apply_abstraction(copy.deepcopy(x)))
         return df
 
     def calculate_masks(self):
