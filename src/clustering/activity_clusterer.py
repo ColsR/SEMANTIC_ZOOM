@@ -11,9 +11,9 @@ class ActivityClusterer(AbstractClusterer):
 
     def build_abstractions(self, col_name) -> dict:
         return {
-            f"activity{col_name}abstracted": ActivityAbstraction(col_name, col_name, instance_clusterer.abstract_instance_complete, 0),
-            f"activity{col_name}bygroup": ActivityAbstraction("org:group", col_name, instance_clusterer.abstract_instance, 1),
-            f"activity{col_name}not_abstracted": ActivityAbstraction(col_name, col_name, instance_clusterer.abstract_instance, 100),
+            f"activity{col_name}_abstracted": ActivityAbstraction(col_name, col_name, instance_clusterer.abstract_instance_complete, 0),
+            f"activity{col_name}_bygroup": ActivityAbstraction("org:group", col_name, instance_clusterer.abstract_instance, 1),
+            f"activity{col_name}_not_abstracted": ActivityAbstraction(col_name, col_name, instance_clusterer.abstract_instance, 100),
         }
 
 
