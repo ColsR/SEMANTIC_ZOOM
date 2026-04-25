@@ -436,3 +436,10 @@ table, th, td {
   border: 1px solid black;
   border-collapse: collapse;
 }
+
+.specific-zoom-config {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+}
