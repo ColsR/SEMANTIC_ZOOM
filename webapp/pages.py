@@ -35,6 +35,7 @@ import src.analysis.attribute_extractor as attribute_extractor
 from src.algo.global_ranking import global_ranking_of_eventdata
 from src.algo.super_graph import build_super_graph
 from src.analysis.data_extraction import get_occurring_entries
+from src.analysis.privacy import max_zoom
 from src.analysis.privacy.privacy_checker import delete_trace, check_metrics
 from src.clustering import general_clusterer, numerical_clusterer
 from src.orchestrator import process_log_for_d3js_abstractions
@@ -130,6 +131,7 @@ def upload_data():
             df = relativeTimestamps(df)
             df, _ = global_ranking_of_eventdata(df)
             export_event_log_custom(df, tmp_path)
+            max_zoom.init_max_zoom_df(load_event_log_from_tempfile(tmp_path))
 
             attribute_extractor.extract_attributes(tmp_path)
             attribute_extractor.extract_attribute_type_mapping()
@@ -180,6 +182,7 @@ def get_abstracted_data():
     # apply abstractions
     df = process_log_for_d3js_abstractions(df, requested_cluster, requested_sp_zooms)
     logger.info("Processed log for d3js with abstractions")
+    max_zoom.export_max_zoom_df()
 
     # export the abstracted log to a csv and a xes file
     df_copy =df.copy()
@@ -205,12 +208,14 @@ def get_abstracted_data():
 
     # Check Privacy:
     global config
-    xes_path = f"{FILEPATH}/volatile_working_xes.xes"
+    #xes_path = f"{FILEPATH}/volatile_working_xes.xes"
+    xes_path = f"{FILEPATH}/max_zoom.xes"
     if config.get("ENFORCE_PRIVACY", False):
         logger.debug("Enforcing privacy on working XES")
 
         if config.get("DELETE_TRACES", False):
             logger.debug("Deleting traces to enforce privacy")
+            #TODO will not work
             delete_trace(f"{FILEPATH}/volatile_working_xes.xes", config.get("K_TRACE", -1), config.get("K_EVENT", -1), config.get("K_EDGE", -1), config.get("L_DIV", 1))
         else:
             logger.debug("Check Privacy without deleting")
