@@ -42,27 +42,29 @@ class AbstractClusterer(ABC):
                 sp_mask = specific_clusterer.build_mask(df, abstraction_obj.mask_source_col, abstraction_obj.mask_filter_attribute)
                 abstraction_obj.set_mask(sp_mask)
             self.calculate_masks()
-            df.loc[abstraction_obj.mask, abstraction_obj.target_col] = df_unabstracted.loc[abstraction_obj.mask, abstraction_obj.source_col].apply(lambda x: abstraction_obj.apply_abstraction(copy.deepcopy(x)))
 
-            # Apply on global max_zoom_df
-            # Apply only if the ranking value for the entry to be abstracted is lower than the ranking of the abstraction_object
-            max_zoom_df = max_zoom.get_max_zoom_df()
-            rank_col = f"rank_{abstraction_obj.target_col}"
-            current_ranks = max_zoom_df.loc[abstraction_obj.mask, rank_col]
+            if abstraction_obj.source_col in df_unabstracted.columns and abstraction_obj.target_col in df.columns:
+                df.loc[abstraction_obj.mask, abstraction_obj.target_col] = df_unabstracted.loc[abstraction_obj.mask, abstraction_obj.source_col].apply(lambda x: abstraction_obj.apply_abstraction(copy.deepcopy(x)))
 
-            update_mask = pd.Series(abstraction_obj.mask.copy())
-            update_mask.loc[abstraction_obj.mask] = (
-                    abstraction_obj.ranking > current_ranks
-            )
+                # Apply on global max_zoom_df
+                # Apply only if the ranking value for the entry to be abstracted is lower than the ranking of the abstraction_object
+                max_zoom_df = max_zoom.get_max_zoom_df()
+                rank_col = f"rank_{abstraction_obj.target_col}"
+                current_ranks = max_zoom_df.loc[abstraction_obj.mask, rank_col]
 
-            new_values = df_unabstracted.loc[update_mask, abstraction_obj.source_col].apply(
-                lambda x: abstraction_obj.apply_abstraction(copy.deepcopy(x))
-            )
+                update_mask = pd.Series(abstraction_obj.mask.copy())
+                update_mask.loc[abstraction_obj.mask] = (
+                        abstraction_obj.ranking > current_ranks
+                )
 
-            max_zoom_df.loc[update_mask, abstraction_obj.target_col] = new_values
+                new_values = df_unabstracted.loc[update_mask, abstraction_obj.source_col].apply(
+                    lambda x: abstraction_obj.apply_abstraction(copy.deepcopy(x))
+                )
 
-            # Rank setzen
-            max_zoom_df.loc[update_mask, rank_col] = abstraction_obj.ranking
+                max_zoom_df.loc[update_mask, abstraction_obj.target_col] = new_values
+
+                # Rank setzen
+                max_zoom_df.loc[update_mask, rank_col] = abstraction_obj.ranking
 
 
 

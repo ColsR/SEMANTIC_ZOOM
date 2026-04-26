@@ -9,7 +9,7 @@ import {CONTOURGRAPH} from "../charts/contourGraph.mjs";
 import {renderInstanceGraph} from "../charts/instanceGraph.mjs";
 
 
-export function ABSTRACTEDMAP(csvdata, x_accessor=timeAccessor, y_accessor=actAccessor) {
+export function ABSTRACTEDMAP(csvdata, x_accessor=timeAccessor, y_accessor=actAccessor, xAxisLabel = 'Time', yAxisLabel = 'Activities') {
     console.info("Drawing Test View");
 
     // Your test view drawing code here
@@ -149,7 +149,7 @@ export function ABSTRACTEDMAP(csvdata, x_accessor=timeAccessor, y_accessor=actAc
 
     drawAxis(ctr, xScale, 'bottom', dimensions, {
     className: 'x-axis',
-    axisLabel: 'Time',
+    axisLabel: xAxisLabel,
     labelDistance: -10,
     tickFormat: xTickFormat,
     tickRotationDegree: 90,
@@ -175,7 +175,7 @@ export function ABSTRACTEDMAP(csvdata, x_accessor=timeAccessor, y_accessor=actAc
     // Draw y-axis
     const yAxisOptions = {
         className: 'y-axis',
-        axisLabel: 'Activities',
+        axisLabel: yAxisLabel,
         tickPadding: 15,
         removeDomain: true,      // remove the y-axis line domain
         opacity: opacityLevelYAxis
