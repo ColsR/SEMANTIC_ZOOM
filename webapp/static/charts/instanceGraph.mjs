@@ -23,7 +23,7 @@ E-Mail: {firstname.lastname}@hu-berlin.de
 // DRAW AN INSTANCE GRAPH
 // -----
 
-import { caseAccessor, actAccessor, timeAccessor, resAccessor, nodes, edges } from "../utils/parsers.mjs";
+import {edges, nodes} from "../utils/parsers.mjs";
 import {getAccessors} from "../utils/parserGenerator.mjs";
 
 async function renderInstanceGraph(graphData, link, container, xAccessor, xScale, yAccessor, yScale, options = {}) {

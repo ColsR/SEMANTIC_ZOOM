@@ -1,11 +1,10 @@
 import {convertLogtoGraph, getUniqueValues} from "../utils/processData.mjs";
-import {actAccessor, caseAccessor, idAccessor, nodes, parseDate, resAccessor, timeAccessor} from "../utils/parsers.mjs";
+import {actAccessor, caseAccessor, idAccessor, nodes, parseDate, timeAccessor} from "../utils/parsers.mjs";
 import {SCALE} from "../layout/scales.mjs";
 import {dimensions} from "../layout/chartDimensions.mjs";
 import {defineArrowHeads} from "../components/arrowheads.mjs";
 import {defineLinkBezier, defineLinkVertical} from "../vizmodules/linkCalculator.mjs";
 import {drawAxis} from "../components/axes.mjs";
-import {CONTOURGRAPH} from "../charts/contourGraph.mjs";
 import {renderInstanceGraph} from "../charts/instanceGraph.mjs";
 
 

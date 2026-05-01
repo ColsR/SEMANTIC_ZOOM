@@ -23,7 +23,7 @@ E-Mail: {firstname.lastname}@hu-berlin.de
 // SCALES
 // -----
 
-import { sortStringArrayByStartNumber } from "../utils/processData.mjs";
+import {sortStringArrayByStartNumber} from "../utils/processData.mjs";
 
 const SCALE = (function () {
     function categories (categories, dimensions, { sort = true, vertical = true } = {}) {
