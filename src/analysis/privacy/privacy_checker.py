@@ -14,11 +14,11 @@ from pm4py.objects.log.obj import EventLog
 
 from src.analysis.privacy.k_anonymity import get_k_anonymity, load_event_log, trace_to_tuple, count_unique_traces, \
     count_unique_events, count_unique_edges
-from src.analysis.privacy.l_diversity import get_l_diversity, calc_l_div
+from src.analysis.privacy.l_diversity import get_l_diversity, calc_l_div, get_l_diversity_single_event
 
 logger = logging.getLogger(__name__)
 
-def check_metrics(xes_path, k_trace=-1, k_event=-1, k_edge=-1, l_div=-1) -> bool:
+def check_metrics(xes_path, k_trace=-1, k_event=-1, k_edge=-1, l_div=-1, single_event_l_div=False, follow_event_l_div=False) -> bool:
     print("Checking privacy metrics for the log...")
     if k_trace > 0 and k_event > 0 and k_edge > 0:
         trace_count_map, edge_count_map, event_count_map = get_k_anonymity(xes_path)
@@ -50,12 +50,16 @@ def check_metrics(xes_path, k_trace=-1, k_event=-1, k_edge=-1, l_div=-1) -> bool
 
 
     if l_div > 0:
-        div_map = get_l_diversity(xes_path)
-        l_div_counts = calc_l_div(div_map)
-        for event_hash, l_div_values in l_div_counts.items():
-            for _, l_div_val in l_div_values.items():
-                if l_div_val < l_div:
-                    return False
+        if single_event_l_div:
+            if not get_l_diversity_single_event(xes_path, l_div):
+                return False
+        if follow_event_l_div:
+            div_map = get_l_diversity(xes_path)
+            l_div_counts = calc_l_div(div_map)
+            for event_hash, l_div_values in l_div_counts.items():
+                for _, l_div_val in l_div_values.items():
+                    if l_div_val < l_div:
+                        return False
 
     return True
 
