@@ -55,6 +55,17 @@ def get_l_diversity(file_path:str):
             prev_event = event
     return event_attribute_l_div_map
 
+def get_l_diversity_single_event(file_path:str, l_div):
+    log = load_event_log(str(file_path))
+    l_diversity_map = load_l_diversity_map(str(L_DIVERSITY_PATH))
+    for trace in log:
+        for event in trace:
+            for column, abstracted_value in event.items():
+                abstracted_value = str(abstracted_value)
+                if len(l_diversity_map[column][abstracted_value]) < l_div:
+                    return False
+    return True
+
 def calc_l_div(event_attribute_l_div_map):
     for event_hash, column_follower_map in event_attribute_l_div_map.items():
         for column, possible_follower in column_follower_map.items():
@@ -62,11 +73,12 @@ def calc_l_div(event_attribute_l_div_map):
     return event_attribute_l_div_map
 
 def main():
-    trace_count_map = get_l_diversity(str(XES_VOLATILE_PATH))
-    print("Unique traces and their counts:")
-    print(trace_count_map)
-    l_div_counts = calc_l_div(trace_count_map)
-    print(l_div_counts)
+    #trace_count_map = get_l_diversity(str(XES_VOLATILE_PATH))
+    #print("Unique traces and their counts:")
+    #print(trace_count_map)
+    #l_div_counts = calc_l_div(trace_count_map)
+    #print(l_div_counts)
+    print(get_l_diversity_single_event(str(XES_VOLATILE_PATH), 2))
 
 if __name__ == "__main__":
     main()

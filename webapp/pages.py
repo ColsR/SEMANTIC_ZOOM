@@ -71,8 +71,11 @@ def load_config():
 
     config["DELETE_TRACES"] = os.getenv("DELETE_TRACES") == "True"
     config["ENFORCE_PRIVACY"] = os.getenv("ENFORCE_PRIVACY") == "True"
+    config["SINGLE_EVENT_L_DIV"] = os.getenv("SINGLE_EVENT_L_DIV") == "True"
+    config["FOlLOW_EVENT_L_DIV"] = os.getenv("FOLLOW_EVENT_L_DIV") == "True"
 
     config["DECOUPLE_TRACES"] = os.getenv("DECOUPLE_TRACES") == "True"
+
 
 
 
@@ -221,7 +224,7 @@ def get_abstracted_data():
             delete_trace(f"{FILEPATH}/volatile_working_xes.xes", config.get("K_TRACE", -1), config.get("K_EVENT", -1), config.get("K_EDGE", -1), config.get("L_DIV", 1))
         else:
             logger.debug("Check Privacy without deleting")
-            privacy_matched =  check_metrics(xes_path, config.get("K_TRACE", -1), config.get("K_EVENT", -1), config.get("K_EDGE", -1), config.get("L_DIV", -1))
+            privacy_matched =  check_metrics(xes_path, config.get("K_TRACE", -1), config.get("K_EVENT", -1), config.get("K_EDGE", -1), config.get("L_DIV", -1), config.get("SINGLE_EVENT_L_DIV", False), config.get("FOlLOW_EVENT_L_DIV", False))
             if not privacy_matched:
                 logger.info("Privacy Metrics not satisfied, don't return event-log to the FrontEnd")
                 return None
