@@ -57,7 +57,9 @@ def extract_attributes(file_path):
 
     logger.info(f"event_attributes_types: {event_attributes_types}")
     logger.info(f"trace_attributes_types: {trace_attributes_types}")
-
+    # Add Case-Identifier
+    if "concept:name" in trace_attributes_types.keys():
+        event_attributes_types.update({"case:concept:name": trace_attributes_types["concept:name"]})
 
 def extract_attribute_type_mapping():
     # Match based on attribute name

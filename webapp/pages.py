@@ -72,6 +72,8 @@ def load_config():
     config["DELETE_TRACES"] = os.getenv("DELETE_TRACES") == "True"
     config["ENFORCE_PRIVACY"] = os.getenv("ENFORCE_PRIVACY") == "True"
 
+    config["DECOUPLE_TRACES"] = os.getenv("DECOUPLE_TRACES") == "True"
+
 
 
 
@@ -225,8 +227,11 @@ def get_abstracted_data():
                 return None
 
     # Build the super nodes and super edges
-    super_df = build_super_graph(df)
-    data = super_df.to_dict(orient='records')
+    if config.get("DECOUPLE_TRACES", True):
+        super_df = build_super_graph(df)
+        data = super_df.to_dict(orient='records')
+    else:
+        data = df.to_dict(orient='records')
     return jsonify(data)
 
 @bp.route("/api/available_abstractions")
@@ -267,6 +272,7 @@ def post_attribute_types():
     new_attribute_type = data["type"]
     logger.info(f"Changing attribute types for {changing_attribute} to {new_attribute_type}")
     attribute_extractor.update_attribute(changing_attribute, new_attribute_type)
+    # initialize clusterer again, because clusterer may change for an attribute
     general_clusterer.reset_abstractions()
     df = load_event_log_from_tempfile(f"{FILEPATH}/persistent_log.xes")
     numerical_clusterer.build_abstractions(df)

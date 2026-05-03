@@ -46,7 +46,7 @@ def build_super_graph(df: pandas.DataFrame):
         for node in (source, target):
             event_tuple = super_nodes[node]
             row_dict = dict(zip(columns, event_tuple))
-            row_dict["case:concept:name"] = case_id
+            row_dict["case:concept:name"] = str(case_id)
             rows.append(row_dict)
 
         case_id += 1
