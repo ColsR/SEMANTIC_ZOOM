@@ -11,7 +11,6 @@ class TimeClusterer(AbstractClusterer):
 
     class TIME_ABSTRACTIONS(Enum):
         MONTH = "MONTH"
-        WEEK = "WEEK"
         DAY = "DAY"
         HOUR = "HOUR"
         MINUTE = "MINUTE"
@@ -26,7 +25,6 @@ class TimeClusterer(AbstractClusterer):
             f"time{col_name}_abstracted": TimeAbstraction(col_name, col_name, abstract_time_complete, 0),
             f"time{col_name}_year": TimeAbstraction(col_name, col_name,  abstract_time_to_year, 1),
             f"time{col_name}_month": TimeAbstraction(col_name, col_name, abstract_time_to_month, 2),
-            f"time{col_name}_week": TimeAbstraction(col_name, col_name, abstract_time_to_week, 3),
             f"time{col_name}_day": TimeAbstraction(col_name, col_name, abstract_time_to_day, 4),
             f"time{col_name}_hour": TimeAbstraction(col_name, col_name, abstract_time_to_hour, 5),
             f"time{col_name}_minute": TimeAbstraction(col_name, col_name, abstract_time_to_minute, 6),
@@ -53,10 +51,6 @@ def abstract_time_to_year(timestamp):
 
 def abstract_time_to_month(timestamp):
     return timestamp.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
-
-def abstract_time_to_week(timestamp):
-    timestamp = timestamp.normalize()
-    return timestamp - pd.to_timedelta(timestamp.weekday(), unit='d')
 
 def abstract_time_to_day(timestamp):
     return timestamp.normalize()
