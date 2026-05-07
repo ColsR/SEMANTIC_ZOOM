@@ -124,6 +124,7 @@ def upload_data():
         export_event_log_custom(df, tmp_path)
         max_zoom.init_max_zoom_df(load_event_log_from_tempfile(tmp_path))
 
+        attribute_extractor.reset_attribute_mapping()
         attribute_extractor.extract_attributes(tmp_path)
         attribute_extractor.extract_attribute_type_mapping()
         attribute_extractor.write_to_file()

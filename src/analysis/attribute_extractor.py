@@ -110,6 +110,9 @@ def write_to_file():
             indent=2
         )
 
+def reset_attribute_mapping():
+    event_attribute_type_mapping.clear()
+    write_to_file()
 
 def update_attribute(attribute, attribute_type):
     event_attribute_type_mapping.update({attribute: ATTRIBUTE_TYPES(attribute_type)})
