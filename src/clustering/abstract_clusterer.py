@@ -14,6 +14,7 @@ class AbstractClusterer(ABC):
         self.std_abstraction_object = None # selected default abstraction
         self.abstractions = self.build_abstractions(col_name)
         self.sp_abstraction_objects = [] # list with all specific zoom abstraction objects
+        self.colum_l_div_map = {}
 
     def set_mask(self, mask):
         self.std_abstraction_object.set_mask(mask)
@@ -107,11 +108,10 @@ class AbstractClusterer(ABC):
             return True
 
     def get_l_div(self):
-        colum_l_div_map = {}
-        colum_l_div_map.update(self.std_abstraction_object.get_l_div_map())
+        self.colum_l_div_map.update(self.std_abstraction_object.get_l_div_map()) #update ist hier ggf. noch nicht das richtige
         for sp_abstraction in self.sp_abstraction_objects:
-            colum_l_div_map.update(sp_abstraction.get_l_div_map())
-        return colum_l_div_map
+            self.colum_l_div_map.update(sp_abstraction.get_l_div_map())
+        return self.colum_l_div_map
 
 
     @abstractmethod
