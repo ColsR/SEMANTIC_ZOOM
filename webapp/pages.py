@@ -19,8 +19,6 @@ Website: https://hu-berlin.de/rubensson
 E-Mail: {firstname.lastname}@hu-berlin.de
 '''
 
-import csv
-import io
 import json
 import logging
 import shutil
@@ -82,21 +80,13 @@ def load_config():
 
 FILEPATH = project_root / 'data' / 'working_data'
 # Import allowance fo file extensions
-ALLOWED_EXTENSIONS = {'csv', 'xes'}
+ALLOWED_EXTENSIONS = {'xes'}
 def allowed_file(filename):
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
 @bp.route("/")
 def home():
     return render_template("pages/index.html")
-
-@bp.route('/api/get_data')
-def get_data():
-    data_path = project_root / 'data' / 'example_data' / 'data-runningexample.csv'
-    with data_path.open(newline='', encoding='utf-8') as f:
-        reader = csv.DictReader(f)
-        data = list(reader)
-    return jsonify(data)
 
 @bp.route('/api/upload_data', methods=['POST'])
 def upload_data():
@@ -115,44 +105,37 @@ def upload_data():
         return jsonify({'error': 'Invalid file type. Only {ALLOWED_EXTENSIONS} allowed.'}), 400
 
     try:
-        if ext == 'csv':
-            stream = io.StringIO(file.stream.read().decode("utf-8"), newline=None)
-            reader = csv.DictReader(stream)
-            data = list(reader)
-        elif ext == 'xes':
-            #file.save(f"{FILEPATH}/working_xes.xes")
-            with tempfile.NamedTemporaryFile(delete=False, suffix=".xes") as tmp:
-                file.save(tmp)
-                tmp_path = tmp.name
-            shutil.copy(tmp_path, f"{FILEPATH}/persistent_log.xes")
-            # attribute_extractor = AttributeExtractor(tmp_path)
-            general_clusterer.reset_abstractions()
-            # TODO artifical Attributes need to be extracted as well -> calculate them or hardcode them?
-            # Probably calculate them and extract them as well, since they might be used for abstraction as well
-            # TODO call get_abstracted_data here with hardcoded? abstractions set to get the Working_Volatile_XES for extraction of attributes and columns
-            # Maybe write this stuff in the persisten_log.xes? -> so extract and write them in the data and then they can be used always -> probably best solution
-            df = load_event_log_from_tempfile(tmp_path)
-            df = simplifyLog(df)
-            df = relativeTimestamps(df)
-            df, _ = global_ranking_of_eventdata(df)
-            export_event_log_custom(df, tmp_path)
-            max_zoom.init_max_zoom_df(load_event_log_from_tempfile(tmp_path))
+        #file.save(f"{FILEPATH}/working_xes.xes")
+        with tempfile.NamedTemporaryFile(delete=False, suffix=".xes") as tmp:
+            file.save(tmp)
+            tmp_path = tmp.name
+        shutil.copy(tmp_path, f"{FILEPATH}/persistent_log.xes")
+        # attribute_extractor = AttributeExtractor(tmp_path)
+        general_clusterer.reset_abstractions()
+        # TODO artifical Attributes need to be extracted as well -> calculate them or hardcode them?
+        # Probably calculate them and extract them as well, since they might be used for abstraction as well
+        # TODO call get_abstracted_data here with hardcoded? abstractions set to get the Working_Volatile_XES for extraction of attributes and columns
+        # Maybe write this stuff in the persisten_log.xes? -> so extract and write them in the data and then they can be used always -> probably best solution
+        df = load_event_log_from_tempfile(tmp_path)
+        df = simplifyLog(df)
+        df = relativeTimestamps(df)
+        df, _ = global_ranking_of_eventdata(df)
+        export_event_log_custom(df, tmp_path)
+        max_zoom.init_max_zoom_df(load_event_log_from_tempfile(tmp_path))
 
-            attribute_extractor.extract_attributes(tmp_path)
-            attribute_extractor.extract_attribute_type_mapping()
-            attribute_extractor.write_to_file()
+        attribute_extractor.extract_attributes(tmp_path)
+        attribute_extractor.extract_attribute_type_mapping()
+        attribute_extractor.write_to_file()
 
 
 
-            logger.info(f"Extracted trace attributes: {attribute_extractor.trace_attributes}")
-            logger.info(f"Extracted event attributes: {attribute_extractor.event_attributes}")
+        logger.info(f"Extracted trace attributes: {attribute_extractor.trace_attributes}")
+        logger.info(f"Extracted event attributes: {attribute_extractor.event_attributes}")
 
-            numerical_clusterer.build_abstractions(df)
-            general_clusterer.get_abstractions() # build_abstractions
-            # Clean up temporary file
-            os.remove(tmp_path)
-        else:
-            return jsonify({'error': 'Unsupported file type'}), 400
+        numerical_clusterer.build_abstractions(df)
+        general_clusterer.get_abstractions() # build_abstractions
+        # Clean up temporary file
+        os.remove(tmp_path)
         return jsonify({'success': 'OK'}), 200
     except Exception as e:
         return jsonify({'error': str(e)}), 500
@@ -191,7 +174,7 @@ def get_abstracted_data():
 
     # export the abstracted log to a csv and a xes file
     df_copy =df.copy()
-    df_copy.to_csv(f"{FILEPATH}/volatile_working_csv.csv", index=False)
+    #df_copy.to_csv(f"{FILEPATH}/volatile_working_csv.csv", index=False)
     try:
         export_event_log_custom(df_copy, f"{FILEPATH}/volatile_working_xes.xes")
 
