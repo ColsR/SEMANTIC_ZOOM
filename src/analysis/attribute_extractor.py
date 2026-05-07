@@ -111,7 +111,12 @@ def write_to_file():
         )
 
 def reset_attribute_mapping():
-    event_attribute_type_mapping.clear()
+    global event_attribute_type_mapping, event_attributes, trace_attributes, trace_attributes_types, event_attributes_types
+    trace_attributes = set()
+    event_attributes = set()
+    event_attribute_type_mapping = dict()
+    trace_attributes_types = defaultdict(set)
+    event_attributes_types = defaultdict(set)
     write_to_file()
 
 def update_attribute(attribute, attribute_type):
