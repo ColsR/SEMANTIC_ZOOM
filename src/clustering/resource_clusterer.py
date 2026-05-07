@@ -11,8 +11,8 @@ class ResourceClusterer(AbstractClusterer):
 
     def build_abstractions(self, col_name):
         return {
-            'resource_abstracted': ResourceAbstraction(col_name, col_name, instance_clusterer.abstract_instance_complete, 0),
-            'resource_not_abstracted': ResourceAbstraction(col_name, col_name, instance_clusterer.abstract_instance, 100)
+            f'{col_name}_abstracted': ResourceAbstraction(col_name, col_name, instance_clusterer.abstract_instance_complete, 0),
+            f'{col_name}_not_abstracted': ResourceAbstraction(col_name, col_name, instance_clusterer.abstract_instance, 100)
         }
 
 

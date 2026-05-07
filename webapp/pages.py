@@ -149,7 +149,7 @@ def get_abstracted_data():
     requested_sp_zooms = data.get("specific_zooms")
     logger.info(f"requested abstractions: {requested_abstractions}")
 
-    ABSTRACTION_FUNCTIONS, FLAT_ABSTRACTION_FUNCTIONS, ABSTRACTIONS_OBJECTS, COlUMN_ABSTRACTION_MAPPING = general_clusterer.get_abstractions() # build_abstractions
+    ABSTRACTIONS_OBJECTS, COlUMN_ABSTRACTION_MAPPING = general_clusterer.get_abstractions() # build_abstractions
     for cluster_obj in ABSTRACTIONS_OBJECTS.values():
         cluster_obj.reset_specific_abstractions() # build requested specific abstractions everytime new
 
@@ -226,15 +226,16 @@ def get_abstracted_data():
 
 @bp.route("/api/available_abstractions")
 def get_available_abstractions():
-    ABSTRACTION_FUNCTIONS, FLAT_ABSTRACTION_FUNCTIONS, ABSTRACTIONS_OBJECTS, COlUMN_ABSTRACTION_MAPPING = general_clusterer.get_abstractions() # build_abstractions
-    logger.info(f"Available abstractions {ABSTRACTION_FUNCTIONS}")
-    abstraction_keys = {attr : list(ABSTRACTION_FUNCTIONS[attr].keys()) for attr in ABSTRACTION_FUNCTIONS.keys()}
+    ABSTRACTIONS_OBJECTS, COlUMN_ABSTRACTION_MAPPING = general_clusterer.get_abstractions() # build_abstractions
+    logger.info(f"Available abstractions {COlUMN_ABSTRACTION_MAPPING}")
+    #abstraction_keys = {attr : list(ABSTRACTION_FUNCTIONS[attr].keys()) for attr in ABSTRACTION_FUNCTIONS.keys()}
+    abstraction_keys = {attr :  list(ABSTRACTIONS_OBJECTS[attr].abstractions.keys()) for attr in ABSTRACTIONS_OBJECTS.keys()}
     return jsonify(abstraction_keys)
 
 @bp.route("/api/available_abstractions/<col_name>")
 def get_available_abstractions_for_column(col_name):
-    ABSTRACTION_FUNCTIONS, FLAT_ABSTRACTION_FUNCTIONS, ABSTRACTIONS_OBJECTS, COlUMN_ABSTRACTION_MAPPING = general_clusterer.get_abstractions() # build_abstractions
-    logger.info(f"Available abstractions {ABSTRACTION_FUNCTIONS}")
+    ABSTRACTIONS_OBJECTS, COlUMN_ABSTRACTION_MAPPING = general_clusterer.get_abstractions() # build_abstractions
+    logger.info(f"Available abstractions {COlUMN_ABSTRACTION_MAPPING}")
     if (clusterer := ABSTRACTIONS_OBJECTS.get(col_name)) is not None:
         abstraction_keys = clusterer.abstractions.keys()
         print(abstraction_keys)

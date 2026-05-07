@@ -67,7 +67,7 @@ def process_log_for_d3js_abstractions(df, requested_clusters, sp_zooms):
         cluster_obj.set_mask(list(standard_mask.copy()))
 
     # Specific Zooming - build abstraction object and set information for building their mask, but not build at this moment
-    ABSTRACTION_FUNCTIONS, FLAT_ABSTRACTION_FUNCTIONS, ABSTRACTION_OBJECTS, COLUMN_ABSTRACTION_MAPPING = general_clusterer.get_abstractions()  # build_abstractions
+    ABSTRACTION_OBJECTS, COLUMN_ABSTRACTION_MAPPING = general_clusterer.get_abstractions()  # build_abstractions
     for specific_zooming in sp_zooms:
         sp_target_column = specific_zooming['target_column']
         sp_source_column = specific_zooming['filter_column']

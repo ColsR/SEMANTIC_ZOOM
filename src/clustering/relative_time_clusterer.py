@@ -24,12 +24,12 @@ class RelativeTimeClusterer(AbstractClusterer):
 
     def build_abstractions(self, col_name):
         return {
-            f"relativetime{col_name}_abstracted": RelativeTimeAbstraction(col_name, col_name, abstract_time_complete, 0),
-            f"relativetime{col_name}_week": RelativeTimeAbstraction(col_name, col_name, abstract_time_to_week, 1),
-            f"relativetime{col_name}_day": RelativeTimeAbstraction(col_name, col_name, abstract_time_to_day, 2),
-            f"relativetime{col_name}_hour": RelativeTimeAbstraction(col_name, col_name, abstract_time_to_hour, 3),
-            f"relativetime{col_name}_minute": RelativeTimeAbstraction(col_name, col_name, abstract_time_to_minute, 4),
-            f"relativetime{col_name}_not_abstracted": RelativeTimeAbstraction(col_name, col_name, instance_clusterer.abstract_instance, 100),
+            f"{col_name}_abstracted": RelativeTimeAbstraction(col_name, col_name, abstract_time_complete, 0),
+            f"{col_name}_week": RelativeTimeAbstraction(col_name, col_name, abstract_time_to_week, 1),
+            f"{col_name}_day": RelativeTimeAbstraction(col_name, col_name, abstract_time_to_day, 2),
+            f"{col_name}_hour": RelativeTimeAbstraction(col_name, col_name, abstract_time_to_hour, 3),
+            f"{col_name}_minute": RelativeTimeAbstraction(col_name, col_name, abstract_time_to_minute, 4),
+            f"{col_name}_not_abstracted": RelativeTimeAbstraction(col_name, col_name, instance_clusterer.abstract_instance, 100),
         }
 
 

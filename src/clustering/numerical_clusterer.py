@@ -26,11 +26,11 @@ class NumericalClusterer(AbstractClusterer):
 
     def build_abstractions(self, col_name):
         return {
-            f"numerical{col_name}_abstracted": InstanceAbstraction(col_name, col_name, instance_clusterer.abstract_instance_complete, 0),
-            f"numerical{col_name}_2_classes": NumericalAbstraction(col_name, col_name, self.col_splits.get(2, []), 1),
-            f"numerical{col_name}_4_classes": NumericalAbstraction(col_name, col_name, self.col_splits.get(4, []), 2),
-            f"numerical{col_name}_8_classes": NumericalAbstraction(col_name, col_name, self.col_splits.get(8, []), 3),
-            f"numerical{col_name}_not_abstracted": InstanceAbstraction(col_name, col_name, instance_clusterer.abstract_instance, 100),
+            f"{col_name}_abstracted": InstanceAbstraction(col_name, col_name, instance_clusterer.abstract_instance_complete, 0),
+            f"{col_name}_2_classes": NumericalAbstraction(col_name, col_name, self.col_splits.get(2, []), 1),
+            f"{col_name}_4_classes": NumericalAbstraction(col_name, col_name, self.col_splits.get(4, []), 2),
+            f"{col_name}_8_classes": NumericalAbstraction(col_name, col_name, self.col_splits.get(8, []), 3),
+            f"{col_name}_not_abstracted": InstanceAbstraction(col_name, col_name, instance_clusterer.abstract_instance, 100),
         }
 
 

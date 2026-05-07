@@ -22,13 +22,13 @@ class TimeClusterer(AbstractClusterer):
 
     def build_abstractions(self, col_name):
         return {
-            f"time{col_name}_abstracted": TimeAbstraction(col_name, col_name, abstract_time_complete, 0),
-            f"time{col_name}_year": TimeAbstraction(col_name, col_name,  abstract_time_to_year, 1),
-            f"time{col_name}_month": TimeAbstraction(col_name, col_name, abstract_time_to_month, 2),
-            f"time{col_name}_day": TimeAbstraction(col_name, col_name, abstract_time_to_day, 4),
-            f"time{col_name}_hour": TimeAbstraction(col_name, col_name, abstract_time_to_hour, 5),
-            f"time{col_name}_minute": TimeAbstraction(col_name, col_name, abstract_time_to_minute, 6),
-            f"time{col_name}_not_abstracted": TimeAbstraction(col_name, col_name, instance_clusterer.abstract_instance, 100),
+            f"{col_name}_abstracted": TimeAbstraction(col_name, col_name, abstract_time_complete, 0),
+            f"{col_name}_year": TimeAbstraction(col_name, col_name,  abstract_time_to_year, 1),
+            f"{col_name}_month": TimeAbstraction(col_name, col_name, abstract_time_to_month, 2),
+            f"{col_name}_day": TimeAbstraction(col_name, col_name, abstract_time_to_day, 4),
+            f"{col_name}_hour": TimeAbstraction(col_name, col_name, abstract_time_to_hour, 5),
+            f"{col_name}_minute": TimeAbstraction(col_name, col_name, abstract_time_to_minute, 6),
+            f"{col_name}_not_abstracted": TimeAbstraction(col_name, col_name, instance_clusterer.abstract_instance, 100),
         }
 
 
