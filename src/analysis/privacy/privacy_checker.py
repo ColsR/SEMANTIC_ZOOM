@@ -19,9 +19,11 @@ from src.analysis.privacy.l_diversity import get_l_diversity, calc_l_div, get_l_
 logger = logging.getLogger(__name__)
 
 def check_metrics(xes_path, k_trace=-1, k_event=-1, k_edge=-1, l_div=-1, single_event_l_div=False, follow_event_l_div=False) -> bool:
+    log = load_event_log(xes_path)
+
     print("Checking privacy metrics for the log...")
     if k_trace > 0 and k_event > 0 and k_edge > 0:
-        trace_count_map, edge_count_map, event_count_map = get_k_anonymity(xes_path)
+        trace_count_map, edge_count_map, event_count_map = get_k_anonymity(xes_path, log)
         for k_trace_value in trace_count_map.values():
             if k_trace_value < k_trace:
                 return False
@@ -33,17 +35,17 @@ def check_metrics(xes_path, k_trace=-1, k_event=-1, k_edge=-1, l_div=-1, single_
                 return False
     else:
         if k_trace > 0:
-            trace_count_map = count_unique_traces(xes_path)
+            trace_count_map = count_unique_traces(xes_path, log)
             for k_trace_value in trace_count_map.values():
                 if k_trace_value < k_trace:
                     return False
         if k_event > 0:
-            event_count_map = count_unique_events(xes_path)
+            event_count_map = count_unique_events(xes_path, log)
             for k_event_value in event_count_map.values():
                 if k_event_value < k_event:
                     return False
         if k_edge > 0:
-            edge_count_map = count_unique_edges(xes_path)
+            edge_count_map = count_unique_edges(xes_path, log)
             for k_edge_value in edge_count_map.values():
                 if k_edge_value < k_edge:
                     return False
@@ -51,10 +53,10 @@ def check_metrics(xes_path, k_trace=-1, k_event=-1, k_edge=-1, l_div=-1, single_
 
     if l_div > 0:
         if single_event_l_div:
-            if not get_l_diversity_single_event(xes_path, l_div):
+            if not get_l_diversity_single_event(xes_path, l_div, log):
                 return False
         if follow_event_l_div:
-            div_map = get_l_diversity(xes_path)
+            div_map = get_l_diversity(xes_path, log)
             l_div_counts = calc_l_div(div_map)
             for event_hash, l_div_values in l_div_counts.items():
                 for _, l_div_val in l_div_values.items():
@@ -70,12 +72,13 @@ def check_metrics(xes_path, k_trace=-1, k_event=-1, k_edge=-1, l_div=-1, single_
 
 
 def delete_trace(xes_path, min_k_trace=-1, min_k_event=-1, min_k_edge=-1, min_l_event=-1):
+    log = load_event_log(xes_path)
     privacy_reached = False
     while not privacy_reached:
         if check_empty_log(xes_path):
             logger.warning("Log is empty after deletions, stopping process.")
             break
-        trace_k_map, edge_k_map, event_k_map = get_k_anonymity(xes_path)
+        trace_k_map, edge_k_map, event_k_map = get_k_anonymity(xes_path, log)
         logger.debug(f"trace_k_map: {trace_k_map}")
         logger.debug(f"edge_k_map: {edge_k_map}")
         logger.debug(f"event_k_map: {event_k_map}")
@@ -86,7 +89,7 @@ def delete_trace(xes_path, min_k_trace=-1, min_k_event=-1, min_k_edge=-1, min_l_
             for event_hash, k_val in event_k_map.items():
                 if k_val < min_k_event:
                     event_hashes.append(event_hash)
-            event_privacy_reached = delete_event_by_hash(xes_path, event_hashes) and event_privacy_reached
+            event_privacy_reached = delete_event_by_hash(xes_path, event_hashes, log) and event_privacy_reached
             if not event_privacy_reached:
                 # a trace is deleted from the log -> load log again and start analysis again
                 continue
@@ -99,7 +102,7 @@ def delete_trace(xes_path, min_k_trace=-1, min_k_event=-1, min_k_edge=-1, min_l_
             for trace_hash_tuple, k_val in edge_k_map.items():
                 if k_val < min_k_edge:
                     edges_hashes.append(trace_hash_tuple)
-            edge_privacy_reached = delete_edge_by_hash(xes_path, edges_hashes) and edge_privacy_reached
+            edge_privacy_reached = delete_edge_by_hash(xes_path, edges_hashes, log) and edge_privacy_reached
             if not edge_privacy_reached:
                 # a trace is deleted from the log -> load log again and start analysis again
                 continue
@@ -111,7 +114,7 @@ def delete_trace(xes_path, min_k_trace=-1, min_k_event=-1, min_k_edge=-1, min_l_
             for trace_hash, k_val in trace_k_map.items():
                 if k_val < min_k_trace:
                     trace_hashes.append(trace_hash)
-            trace_privacy_reached = delete_trace_by_hash(xes_path, trace_hashes) and trace_privacy_reached
+            trace_privacy_reached = delete_trace_by_hash(xes_path, trace_hashes, log) and trace_privacy_reached
             if not trace_privacy_reached:
                 # a trace is deleted from the log -> load log again and start analysis again
                 continue
@@ -136,9 +139,10 @@ def delete_trace(xes_path, min_k_trace=-1, min_k_event=-1, min_k_edge=-1, min_l_
         privacy_reached = True
 
 # returns true if event was deleted, false if not
-def delete_event_by_hash(XES_PATH, event_hashes_to_delete) -> bool:
+def delete_event_by_hash(file_path:str, event_hashes_to_delete, log=None) -> bool:
+    if log is None:
+        log = load_event_log(str(file_path))
     logger.debug(f"deleting event: {event_hashes_to_delete}")
-    log = load_event_log(str(XES_PATH))
     filtered_case_ids =[]
     for trace in log:
         for event in trace:
@@ -147,12 +151,13 @@ def delete_event_by_hash(XES_PATH, event_hashes_to_delete) -> bool:
                 filtered_case_ids.append(trace.attributes["concept:name"])
 
     filtered_log = filter_eventlog_by_cases(log, filtered_case_ids)
-    pm4py.write_xes(filtered_log, XES_PATH)
+    pm4py.write_xes(filtered_log, file_path)
     return filtered_case_ids == []
 
-def delete_edge_by_hash(XES_PATH, edge_hashes_to_delete) -> bool:
+def delete_edge_by_hash(file_path:str, edge_hashes_to_delete, log=None) -> bool:
+    if log is None:
+        log = load_event_log(str(file_path))
     logger.debug(f"deleting edge: {edge_hashes_to_delete}")
-    log = load_event_log(str(XES_PATH))
     filtered_case_ids = []
     for trace in log:
         old_event = None
@@ -165,12 +170,13 @@ def delete_edge_by_hash(XES_PATH, edge_hashes_to_delete) -> bool:
                 filtered_case_ids.append(trace.attributes["concept:name"])
 
     filtered_log = filter_eventlog_by_cases(log, filtered_case_ids)
-    pm4py.write_xes(filtered_log, XES_PATH)
+    pm4py.write_xes(filtered_log, file_path)
     return filtered_case_ids == []
 
-def delete_trace_by_hash(XES_PATH, trace_hashes) -> bool:
+def delete_trace_by_hash(file_path:str, trace_hashes, log=None) -> bool:
+    if log is None:
+        log = load_event_log(str(file_path))
     logger.debug(f"deleting trace: {trace_hashes}")
-    log = load_event_log(str(XES_PATH))
     filtered_case_ids =[]
     for trace in log:
         trace_tuple = hash(trace_to_tuple(trace))
@@ -179,7 +185,7 @@ def delete_trace_by_hash(XES_PATH, trace_hashes) -> bool:
             filtered_case_ids.append(case_id)
 
     filtered_log = filter_eventlog_by_cases(log, filtered_case_ids)
-    pm4py.write_xes(filtered_log, XES_PATH)
+    pm4py.write_xes(filtered_log, file_path)
     return filtered_case_ids == []
 
 def filter_eventlog_by_cases(log, cases_to_remove):
@@ -192,8 +198,9 @@ def filter_eventlog_by_cases(log, cases_to_remove):
 
 
 
-def check_empty_log(XES_PATH):
-    log = load_event_log(str(XES_PATH))
+def check_empty_log(file_path:str, log=None):
+    if log is None:
+        log = load_event_log(str(file_path))
     return len(log) == 0
 
 def main():

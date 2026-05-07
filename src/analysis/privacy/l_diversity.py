@@ -32,8 +32,9 @@ def load_l_diversity_map(file_path):
         return json.load(open(str(L_DIVERSITY_PATH), 'r'))
 
 
-def get_l_diversity(file_path:str):
-    log = load_event_log(str(file_path))
+def get_l_diversity(file_path:str, log=None):
+    if log is None:
+        log = load_event_log(str(file_path))
     event_attribute_l_div_map = defaultdict(dict)
     l_diversity_map = load_l_diversity_map(str(L_DIVERSITY_PATH))
     for trace in log:
@@ -55,8 +56,9 @@ def get_l_diversity(file_path:str):
             prev_event = event
     return event_attribute_l_div_map
 
-def get_l_diversity_single_event(file_path:str, l_div):
-    log = load_event_log(str(file_path))
+def get_l_diversity_single_event(file_path:str, l_div, log=None):
+    if log is None:
+        log = load_event_log(str(file_path))
     l_diversity_map = load_l_diversity_map(str(L_DIVERSITY_PATH))
     for trace in log:
         for event in trace:

@@ -21,14 +21,15 @@ E-Mail: {firstname.lastname}@hu-berlin.de
 
 import json
 import logging
+import os
 import shutil
 import sys
 import tempfile
 from pathlib import Path
 
+from dotenv import load_dotenv
 from flask import Blueprint, render_template, request, jsonify
 
-# from src.analysis.attribute_extractor import AttributeExtractor
 import src.analysis.attribute_extractor as attribute_extractor
 from src.algo.global_ranking import global_ranking_of_eventdata
 from src.algo.super_graph import build_super_graph
@@ -41,9 +42,6 @@ from src.orchestrator import process_log_for_d3js_abstractions
 from src.utils.data_exporting import export_event_log_custom
 from src.utils.data_importing import load_event_log_from_tempfile
 from src.utils.data_processing import simplifyLog, relativeTimestamps
-
-import os
-from dotenv import load_dotenv
 
 # App directory
 project_root = Path(__file__).resolve().parent.parent
@@ -75,9 +73,7 @@ def load_config():
 
     config["DECOUPLE_TRACES"] = os.getenv("DECOUPLE_TRACES") == "True"
 
-
-
-
+    config["EXPORT_ABSTRACTED_LOG"] = os.getenv("EXPORT_ABSTRACTED_LOG") == "True"
 
 FILEPATH = project_root / 'data' / 'working_data'
 # Import allowance fo file extensions
@@ -97,7 +93,6 @@ def upload_data():
 
     file = request.files['file']
     filename = file.filename
-    ext = filename.rsplit('.', 1)[1].lower()
 
     if filename == '':
         return jsonify({'error': 'No file selected'}), 400
@@ -106,17 +101,14 @@ def upload_data():
         return jsonify({'error': 'Invalid file type. Only {ALLOWED_EXTENSIONS} allowed.'}), 400
 
     try:
-        #file.save(f"{FILEPATH}/working_xes.xes")
         with tempfile.NamedTemporaryFile(delete=False, suffix=".xes") as tmp:
             file.save(tmp)
             tmp_path = tmp.name
         shutil.copy(tmp_path, f"{FILEPATH}/persistent_log.xes")
-        # attribute_extractor = AttributeExtractor(tmp_path)
+
+        # preprocess for injecting the artificial attributes (relative_timestamp, ranked_activities)
+        # then the attribute extractor see these attributes too
         general_clusterer.reset_abstractions()
-        # TODO artifical Attributes need to be extracted as well -> calculate them or hardcode them?
-        # Probably calculate them and extract them as well, since they might be used for abstraction as well
-        # TODO call get_abstracted_data here with hardcoded? abstractions set to get the Working_Volatile_XES for extraction of attributes and columns
-        # Maybe write this stuff in the persisten_log.xes? -> so extract and write them in the data and then they can be used always -> probably best solution
         df = load_event_log_from_tempfile(tmp_path)
         df = simplifyLog(df)
         df = relativeTimestamps(df)
@@ -128,8 +120,6 @@ def upload_data():
         attribute_extractor.extract_attributes(tmp_path)
         attribute_extractor.extract_attribute_type_mapping()
         attribute_extractor.write_to_file()
-
-
 
         logger.info(f"Extracted trace attributes: {attribute_extractor.trace_attributes}")
         logger.info(f"Extracted event attributes: {attribute_extractor.event_attributes}")
@@ -144,6 +134,7 @@ def upload_data():
 
 @bp.route("/api/abstracted_data", methods=['POST'])
 def get_abstracted_data():
+    global config
     data = request.get_json()
     requested_abstractions = data.get("abstractions")
     requested_sp_zooms = data.get("specific_zooms")
@@ -180,22 +171,19 @@ def get_abstracted_data():
             }
         }), 400
     logger.info("Processed log for d3js with abstractions")
-    max_zoom.export_max_zoom_df()
+    max_zoom.export_max_zoom_df() # write the current max_zoom_df to the disk
 
     # export the abstracted log to a csv and a xes file
     df_copy =df.copy()
-    #df_copy.to_csv(f"{FILEPATH}/volatile_working_csv.csv", index=False)
-    try:
-        export_event_log_custom(df_copy, f"{FILEPATH}/volatile_working_xes.xes")
-        general_clusterer.get_abstractions() # build_abstractions
-
-    except Exception as e:
-        logger.error(f"Error exporting event log: {e}")
-        raise RuntimeError(f"Error exporting event log: {e}")
+    if config.get("EXPORT_ABSTRACTED_LOG", False):
+        try:
+            export_event_log_custom(df_copy, f"{FILEPATH}/volatile_working_xes.xes")
+        except Exception as e:
+            logger.error(f"Error exporting event log: {e}")
+            raise RuntimeError(f"Error exporting event log: {e}")
 
 
     # Check Privacy:
-    global config
     xes_path = f"{FILEPATH}/max_zoom.xes"
     if config.get("ENFORCE_PRIVACY", False):
         logger.debug("Enforcing privacy on working XES")
@@ -228,7 +216,6 @@ def get_abstracted_data():
 def get_available_abstractions():
     ABSTRACTIONS_OBJECTS, COlUMN_ABSTRACTION_MAPPING = general_clusterer.get_abstractions() # build_abstractions
     logger.info(f"Available abstractions {COlUMN_ABSTRACTION_MAPPING}")
-    #abstraction_keys = {attr : list(ABSTRACTION_FUNCTIONS[attr].keys()) for attr in ABSTRACTION_FUNCTIONS.keys()}
     abstraction_keys = {attr :  list(ABSTRACTIONS_OBJECTS[attr].abstractions.keys()) for attr in ABSTRACTIONS_OBJECTS.keys()}
     return jsonify(abstraction_keys)
 
@@ -238,7 +225,7 @@ def get_available_abstractions_for_column(col_name):
     logger.info(f"Available abstractions {COlUMN_ABSTRACTION_MAPPING}")
     if (clusterer := ABSTRACTIONS_OBJECTS.get(col_name)) is not None:
         abstraction_keys = clusterer.abstractions.keys()
-        print(abstraction_keys)
+        logger.debug(abstraction_keys)
         return jsonify(list(abstraction_keys))
     else:
         logger.warning(f"No abstraction found for column: {col_name}")

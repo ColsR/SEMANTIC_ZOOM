@@ -27,8 +27,9 @@ def trace_to_tuple(trace):
 
 
 # k-anonymity at trace level -> get all events of the trace in a tuple, hash them and use them as key
-def count_unique_traces(file_path:str):
-    log =load_event_log(file_path)
+def count_unique_traces(file_path:str, log=None):
+    if log is None:
+        log =load_event_log(file_path)
     trace_count_map = {}
     for trace in log:
         trace_tuple = hash(trace_to_tuple(trace))
@@ -39,8 +40,9 @@ def count_unique_traces(file_path:str):
     return trace_count_map
 
 # k-anonymity at event level -> check event attributes, hash them and use them as key
-def count_unique_events(file_path:str):
-    log =load_event_log(file_path)
+def count_unique_events(file_path:str, log=None):
+    if log is None:
+        log =load_event_log(file_path)
     event_count_map = {}
     for trace in log:
         for event in trace:
@@ -52,8 +54,9 @@ def count_unique_events(file_path:str):
     return event_count_map
 
 # k-anonymity at edge level -> check traces and two events that follow each other, hash this edge and use them as key
-def count_unique_edges(file_path:str):
-    log =load_event_log(file_path)
+def count_unique_edges(file_path:str, log=None):
+    if log is None:
+        log =load_event_log(file_path)
     edge_count_map = {}
     for trace in log:
         old_event = None
@@ -69,11 +72,12 @@ def count_unique_edges(file_path:str):
     return edge_count_map
 
 # trace edge and event k-anonymity interleaved to increase performance
-def get_k_anonymity(file_path):
+def get_k_anonymity(file_path:str, log=None):
     edge_count_map = {}
     event_count_map = {}
     trace_count_map = {}
-    log = load_event_log(file_path)
+    if log is None:
+        log = load_event_log(file_path)
     for trace in log:
         old_event = None
         for event in trace:
