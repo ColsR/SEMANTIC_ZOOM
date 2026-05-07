@@ -175,5 +175,5 @@ def convert_timecols_to_string(df):
             df_str[col] = df_str[col].dt.total_seconds().astype(str)
             convert_columns.append(col)
     #df_str[convert_columns] = df_str[convert_columns].astype(str)
-    logger.debug("Converted columns to string:", convert_columns)
+    logger.debug("Converted columns to string: %s", convert_columns)
     return df_str

@@ -8,6 +8,10 @@ import pandas as pd
 
 logger = logging.getLogger(__name__)
 
+class CycleDetectedException(Exception):
+    pass
+
+
 def build_mask(df, filter_source_column, filter_attribute):
     filter_func = lambda x : str(x) == filter_attribute
     if isinstance(df[filter_source_column][0], pd.Timestamp):
@@ -60,7 +64,7 @@ def build_dependency_graph(abstractions):
         arrows=True
     )
 
-    # plt.show()
+    #plt.show()
 
     if not nx.is_directed_acyclic_graph(G):
         logger.warning("The graph is not directed acyclic")
@@ -109,7 +113,7 @@ def get_execution_layers(G):
                    resolved = True
                    break
             if not resolved:
-                raise ValueError("Cycle detected")
+                raise CycleDetectedException("Cycle detected but not resolved")
             continue
 
         # back in std case
