@@ -36,6 +36,7 @@ from src.analysis.data_extraction import get_occurring_entries
 from src.analysis.privacy import max_zoom
 from src.analysis.privacy.privacy_checker import delete_trace, check_metrics
 from src.clustering import general_clusterer, numerical_clusterer
+from src.clustering.specific_clusterer import CycleDetectedException
 from src.orchestrator import process_log_for_d3js_abstractions
 from src.utils.data_exporting import export_event_log_custom
 from src.utils.data_importing import load_event_log_from_tempfile
@@ -168,7 +169,15 @@ def get_abstracted_data():
     logger.debug(df.head())
 
     # apply abstractions
-    df = process_log_for_d3js_abstractions(df, requested_cluster, requested_sp_zooms)
+    try:
+        df = process_log_for_d3js_abstractions(df, requested_cluster, requested_sp_zooms)
+    except CycleDetectedException as e:
+        return jsonify({
+            "error": {
+                "code": "CYCLE_DETECTED_IN_ABSTRACTION_DEPENDENCIES",
+                "message": "A cycle was detected in the abstraction dependencies."
+            }
+        }), 400
     logger.info("Processed log for d3js with abstractions")
     max_zoom.export_max_zoom_df()
 
@@ -177,16 +186,6 @@ def get_abstracted_data():
     #df_copy.to_csv(f"{FILEPATH}/volatile_working_csv.csv", index=False)
     try:
         export_event_log_custom(df_copy, f"{FILEPATH}/volatile_working_xes.xes")
-
-        # Testing
-        #attribute_extractor = AttributeExtractor(f"{FILEPATH}/volatile_working_xes.xes")
-        """"
-        attribute_extractor.extract_attributes(f"{FILEPATH}/volatile_working_xes.xes")
-        attribute_extractor.extract_attribute_type_mapping()
-        attribute_extractor.write_to_file()
-        print(f"Extracted trace attributes testing: {attribute_extractor.trace_attributes}")
-        print(f"Extracted event attributes testing: {attribute_extractor.event_attributes}")
-        """
         general_clusterer.get_abstractions() # build_abstractions
 
     except Exception as e:
@@ -196,7 +195,6 @@ def get_abstracted_data():
 
     # Check Privacy:
     global config
-    #xes_path = f"{FILEPATH}/volatile_working_xes.xes"
     xes_path = f"{FILEPATH}/max_zoom.xes"
     if config.get("ENFORCE_PRIVACY", False):
         logger.debug("Enforcing privacy on working XES")
@@ -210,7 +208,12 @@ def get_abstracted_data():
             privacy_matched =  check_metrics(xes_path, config.get("K_TRACE", -1), config.get("K_EVENT", -1), config.get("K_EDGE", -1), config.get("L_DIV", -1), config.get("SINGLE_EVENT_L_DIV", False), config.get("FOlLOW_EVENT_L_DIV", False))
             if not privacy_matched:
                 logger.info("Privacy Metrics not satisfied, don't return event-log to the FrontEnd")
-                return None
+                return jsonify({
+                    "error": {
+                        "code": "PRIVACY_REQUIREMENTS_NOT_SATISFIED",
+                        "message": "Privacy requirements not satisfied"
+                    }
+                }), 400
 
     # Build the super nodes and super edges
     if config.get("DECOUPLE_TRACES", True):
