@@ -223,10 +223,12 @@ h3 {
 
 .link-up {
   stroke: #fc8d59;
+  stroke-opacity: 0.6;
 }
 
 .link-down {
-  stroke: #91bfdb;   
+  stroke: #91bfdb;
+  stroke-opacity: 0.6;
 }
 
 .link-abstract-up {
@@ -245,13 +247,52 @@ h3 {
     fill: #4575b4;
 }
 
-#tooltip {
-  text-align: center;
+#tooltip,
+.tooltip {
+  text-align: left;
   border: 1px solid #ccc;
   position: absolute;
   padding: 10px;
   background-color: #fff;
-  display: none;
+  display: block;
+  visibility: hidden;
+  pointer-events: auto;
+  max-width: min(380px, calc(100vw - 24px));
+  max-height: 260px;
+  overflow-y: auto;
+  overflow-x: hidden;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.12);
+  border-radius: 4px;
+  font-size: 12px;
+  line-height: 1.35;
+  z-index: 1000;
+}
+
+.tooltip-title {
+  font-weight: 700;
+  margin-bottom: 0.5rem;
+}
+
+.tooltip-entry + .tooltip-entry {
+  margin-top: 0.75rem;
+  padding-top: 0.75rem;
+  border-top: 1px solid #eee;
+}
+
+.tooltip[data-pinned="true"] {
+  border-color: #888;
+  box-shadow: 0 8px 22px rgba(0, 0, 0, 0.16);
+}
+
+.tooltip-entry-title {
+  font-weight: 600;
+  margin-bottom: 0.25rem;
+}
+
+.tooltip-row {
+  word-break: break-word;
 }
 
 #tooltip .metric-date {
@@ -305,7 +346,7 @@ h3 {
   stroke: grey;
   stroke-linejoin: round;
   stroke-width: 1;
-  stroke-opacity: .5;
+  opacity: 0.5;
   display: none;
 }
 
