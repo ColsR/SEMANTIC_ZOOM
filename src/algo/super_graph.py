@@ -1,3 +1,5 @@
+from uuid import uuid1
+
 import pandas
 import pandas as pd
 from bidict import bidict
@@ -43,13 +45,14 @@ def build_super_graph(df: pandas.DataFrame):
     case_id = 0
 
     for source, target in super_edges:
+        case_id = uuid1()
         for node in (source, target):
             event_tuple = super_nodes[node]
             row_dict = dict(zip(columns, event_tuple))
             row_dict["case:concept:name"] = str(case_id)
             rows.append(row_dict)
 
-        case_id += 1
+
 
     super_dataframe = pd.DataFrame(rows, columns=["case:concept:name"] + columns)
     return super_dataframe
