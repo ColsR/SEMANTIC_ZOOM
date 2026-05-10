@@ -68,6 +68,19 @@ def get_l_diversity_single_event(file_path:str, l_div, log=None):
                     return False
     return True
 
+
+def get_l_diversity_single_event_map(file_path:str, log=None):
+    event_l_div_map = defaultdict(dict)
+    if log is None:
+        log = load_event_log(str(file_path))
+    l_diversity_map = load_l_diversity_map(str(L_DIVERSITY_PATH))
+    for trace in log:
+        for event in trace:
+            for column, abstracted_value in event.items():
+                abstracted_value = str(abstracted_value)
+                event_l_div_map[hash(event)][column] = len(l_diversity_map[column][abstracted_value])
+    return event_l_div_map
+
 def calc_l_div(event_attribute_l_div_map):
     for event_hash, column_follower_map in event_attribute_l_div_map.items():
         for column, possible_follower in column_follower_map.items():

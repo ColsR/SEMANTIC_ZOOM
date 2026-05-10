@@ -7,14 +7,19 @@ if a trace violates one of the privacy requirements it is removed from the XES
 then the process is started again, because the deletion of the trace can cause other traces to violate the privacy requirements, which can lead to a cascade effect of trace deletions
 """
 import logging
+from copy import copy, deepcopy
 from pathlib import Path
 
+import pandas as pd
 import pm4py
 from pm4py.objects.log.obj import EventLog
 
+from src.analysis.privacy import max_zoom
 from src.analysis.privacy.k_anonymity import get_k_anonymity, load_event_log, trace_to_tuple, count_unique_traces, \
     count_unique_events, count_unique_edges
-from src.analysis.privacy.l_diversity import get_l_diversity, calc_l_div, get_l_diversity_single_event
+from src.analysis.privacy.l_diversity import get_l_diversity, calc_l_div, get_l_diversity_single_event, \
+    get_l_diversity_single_event_map
+from src.utils.data_exporting import export_event_log_custom
 
 logger = logging.getLogger(__name__)
 
@@ -68,33 +73,32 @@ def check_metrics(xes_path, k_trace=-1, k_event=-1, k_edge=-1, l_div=-1, single_
 
 
 
-
-
-
-def delete_trace(xes_path, min_k_trace=-1, min_k_event=-1, min_k_edge=-1, min_l_event=-1):
-    log = load_event_log(xes_path)
+def delete_trace2(df, max_zoom_path, persistent_path, min_k_trace=-1, min_k_event=-1, min_k_edge=-1, l_div=-1, single_event_l_div=False, follow_event_l_div=False):
+    log = load_event_log(max_zoom_path)
     privacy_reached = False
+    cases_to_delete = set()
     while not privacy_reached:
-        if check_empty_log(xes_path):
+        if check_empty_log(max_zoom_path):
             logger.warning("Log is empty after deletions, stopping process.")
             break
-        trace_k_map, edge_k_map, event_k_map = get_k_anonymity(xes_path, log)
+        trace_k_map, edge_k_map, event_k_map = get_k_anonymity(max_zoom_path, log)
         logger.debug(f"trace_k_map: {trace_k_map}")
         logger.debug(f"edge_k_map: {edge_k_map}")
         logger.debug(f"event_k_map: {event_k_map}")
 
         if min_k_event > 0:
             event_privacy_reached = True
-            event_hashes= []
+            event_hashes = []
             for event_hash, k_val in event_k_map.items():
                 if k_val < min_k_event:
                     event_hashes.append(event_hash)
-            event_privacy_reached = delete_event_by_hash(xes_path, event_hashes, log) and event_privacy_reached
+            filtered_event_case_ids = delete_event_by_hash(max_zoom_path, event_hashes, log)
+            cases_to_delete = cases_to_delete.union(filtered_event_case_ids)
+            event_privacy_reached = event_privacy_reached and filtered_event_case_ids == []
             if not event_privacy_reached:
                 # a trace is deleted from the log -> load log again and start analysis again
                 continue
             print("Check Event K-anonymity completed")
-
 
         if min_k_edge > 0:
             edge_privacy_reached = True
@@ -102,7 +106,9 @@ def delete_trace(xes_path, min_k_trace=-1, min_k_event=-1, min_k_edge=-1, min_l_
             for trace_hash_tuple, k_val in edge_k_map.items():
                 if k_val < min_k_edge:
                     edges_hashes.append(trace_hash_tuple)
-            edge_privacy_reached = delete_edge_by_hash(xes_path, edges_hashes, log) and edge_privacy_reached
+            filtered_edge_case_ids = delete_edge_by_hash(max_zoom_path, edges_hashes, log)
+            cases_to_delete = cases_to_delete.union(filtered_edge_case_ids)
+            edge_privacy_reached = edge_privacy_reached and filtered_edge_case_ids == []
             if not edge_privacy_reached:
                 # a trace is deleted from the log -> load log again and start analysis again
                 continue
@@ -114,32 +120,65 @@ def delete_trace(xes_path, min_k_trace=-1, min_k_event=-1, min_k_edge=-1, min_l_
             for trace_hash, k_val in trace_k_map.items():
                 if k_val < min_k_trace:
                     trace_hashes.append(trace_hash)
-            trace_privacy_reached = delete_trace_by_hash(xes_path, trace_hashes, log) and trace_privacy_reached
+            filtered_trace_case_ids = delete_trace_by_hash(max_zoom_path, trace_hashes, log) and trace_privacy_reached
+            cases_to_delete = cases_to_delete.union(filtered_trace_case_ids)
+            trace_privacy_reached = trace_privacy_reached and filtered_trace_case_ids== []
             if not trace_privacy_reached:
                 # a trace is deleted from the log -> load log again and start analysis again
                 continue
             print("Check Trace K-anonymity completed")
 
-
-        if min_l_event > 0:
-            event_l_div_reached = True
-            l_div_event_hashes = []
-            l_div_counts = calc_l_div(get_l_diversity(load_event_log(xes_path)))
-            print(l_div_counts)
-            for event_hash, l_div_values in l_div_counts.items():
-                for _, l_div_val in l_div_values.items():
-                    if l_div_val < min_l_event:
-                        l_div_event_hashes.append(event_hash)
-            event_l_div_reached = delete_event_by_hash(xes_path, l_div_event_hashes) and event_l_div_reached
-            if not event_l_div_reached:
-                # a trace is deleted from the log -> load log again and start analysis again
-                continue
-            print("Check Event L-diversity completed")
+        if l_div > 0:
+            if single_event_l_div:
+                single_event_l_div_reached = True
+                single_l_div_event_hashes = []
+                l_div_counts = get_l_diversity_single_event_map(max_zoom_path, log)
+                for event_hash, l_div_values in l_div_counts.items():
+                    for _, l_div_val in l_div_values.items():
+                        if l_div_val < l_div:
+                            single_l_div_event_hashes.append(event_hash)
+                filtered_l_div_case_ids = delete_event_by_hash(max_zoom_path, single_l_div_event_hashes)
+                cases_to_delete = cases_to_delete.union(filtered_l_div_case_ids)
+                single_event_l_div_reached = single_event_l_div_reached and filtered_l_div_case_ids == []
+                if not single_event_l_div_reached:
+                    # a trace is deleted from the log -> load log again and start analysis again
+                    continue
+            if follow_event_l_div:
+                follow_event_l_div_reached = True
+                follow_l_div_event_hashes = []
+                l_div_counts = calc_l_div(get_l_diversity(load_event_log(max_zoom_path)))
+                print(l_div_counts)
+                for event_hash, l_div_values in l_div_counts.items():
+                    for _, l_div_val in l_div_values.items():
+                        if l_div_val < l_div:
+                            follow_l_div_event_hashes.append(event_hash)
+                filtered_l_div_case_ids = delete_event_by_hash(max_zoom_path, follow_l_div_event_hashes)
+                cases_to_delete = cases_to_delete.union(filtered_l_div_case_ids)
+                follow_event_l_div_reached = follow_event_l_div_reached and filtered_l_div_case_ids == []
+                if not follow_event_l_div_reached:
+                    # a trace is deleted from the log -> load log again and start analysis again
+                    continue
+                print("Check Event L-diversity completed")
 
         privacy_reached = True
 
-# returns true if event was deleted, false if not
-def delete_event_by_hash(file_path:str, event_hashes_to_delete, log=None) -> bool:
+    # the max_zoom.xes is the data strucutre the algorithm is worjing with and therefore the cases are deleted there automatically
+    # delete the cases also in all other datastructures
+    max_zoom.filter_by_cases(cases_to_delete)
+
+    persistent_log = load_event_log(persistent_path)
+    filtered_persistent_event_log = filter_eventlog_by_cases(persistent_log, cases_to_delete)
+    if len(filtered_persistent_event_log) > 0:
+        pm4py.write_xes(deepcopy(filtered_persistent_event_log), persistent_path)
+    else:
+        empty_df = get_dummy_df()
+        pm4py.write_xes(empty_df, persistent_path)
+
+    return df[~df["case:concept:name"].isin(cases_to_delete)]
+
+
+# returns the case ids of the deleted traces
+def delete_event_by_hash(file_path:str, event_hashes_to_delete, log=None) -> list[str]:
     if log is None:
         log = load_event_log(str(file_path))
     logger.debug(f"deleting event: {event_hashes_to_delete}")
@@ -149,12 +188,16 @@ def delete_event_by_hash(file_path:str, event_hashes_to_delete, log=None) -> boo
             event_hash = hash(event)
             if event_hash in event_hashes_to_delete:
                 filtered_case_ids.append(trace.attributes["concept:name"])
-
     filtered_log = filter_eventlog_by_cases(log, filtered_case_ids)
-    pm4py.write_xes(filtered_log, file_path)
-    return filtered_case_ids == []
+    if len(filtered_log) > 0:
+        logger.debug(f"deleting event: {event_hashes_to_delete}")
+        pm4py.write_xes(deepcopy(filtered_log), file_path)
+    else:
+        empty_df = get_dummy_df()
+        pm4py.write_xes(empty_df, file_path)
+    return filtered_case_ids
 
-def delete_edge_by_hash(file_path:str, edge_hashes_to_delete, log=None) -> bool:
+def delete_edge_by_hash(file_path:str, edge_hashes_to_delete, log=None) -> list[str]:
     if log is None:
         log = load_event_log(str(file_path))
     logger.debug(f"deleting edge: {edge_hashes_to_delete}")
@@ -170,10 +213,15 @@ def delete_edge_by_hash(file_path:str, edge_hashes_to_delete, log=None) -> bool:
                 filtered_case_ids.append(trace.attributes["concept:name"])
 
     filtered_log = filter_eventlog_by_cases(log, filtered_case_ids)
-    pm4py.write_xes(filtered_log, file_path)
-    return filtered_case_ids == []
+    if len(filtered_log) > 0:
+        logger.debug(f"deleting edge: {edge_hashes_to_delete}")
+        pm4py.write_xes(deepcopy(filtered_log), file_path)
+    else:
+        empty_df = get_dummy_df()
+        pm4py.write_xes(empty_df, file_path)
+    return filtered_case_ids
 
-def delete_trace_by_hash(file_path:str, trace_hashes, log=None) -> bool:
+def delete_trace_by_hash(file_path:str, trace_hashes, log=None) -> list[str]:
     if log is None:
         log = load_event_log(str(file_path))
     logger.debug(f"deleting trace: {trace_hashes}")
@@ -185,8 +233,13 @@ def delete_trace_by_hash(file_path:str, trace_hashes, log=None) -> bool:
             filtered_case_ids.append(case_id)
 
     filtered_log = filter_eventlog_by_cases(log, filtered_case_ids)
-    pm4py.write_xes(filtered_log, file_path)
-    return filtered_case_ids == []
+    if len(filtered_log) > 0:
+        logger.debug(f"deleting trace: {trace_hashes}")
+        pm4py.write_xes(deepcopy(filtered_log), file_path)
+    else:
+        empty_df = get_dummy_df()
+        pm4py.write_xes(empty_df, file_path)
+    return filtered_case_ids
 
 def filter_eventlog_by_cases(log, cases_to_remove):
     filtered_traces = [
@@ -202,6 +255,14 @@ def check_empty_log(file_path:str, log=None):
     if log is None:
         log = load_event_log(str(file_path))
     return len(log) == 0
+
+
+def get_dummy_df():
+    return pd.DataFrame({
+            "case:concept:name": pd.Series(dtype="str"),
+            "concept:name": pd.Series(dtype="str"),
+            "time:timestamp": pd.Series(dtype="datetime64[ns]")
+        })
 
 def main():
     if __debug__:

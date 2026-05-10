@@ -21,6 +21,13 @@ def get_max_zoom_df():
     global max_zoom_df
     return max_zoom_df
 
+def filter_by_cases(cases_to_delete):
+    global max_zoom_df
+    max_zoom_df = max_zoom_df[
+        ~max_zoom_df["case:concept:name"].isin(cases_to_delete)
+    ]
+
+
 
 def export_max_zoom_df():
     global max_zoom_df

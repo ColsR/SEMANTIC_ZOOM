@@ -48,6 +48,8 @@ def build_abstractions():
         custom_columns.add(col_name)
 
     for col_name, attribute_type in attributes.items():
+        if col_name == "case:concept:name":
+            continue # Case Identifier should be visible but not abstractable
         if col_name not in custom_columns:
             match attribute_type:
 
