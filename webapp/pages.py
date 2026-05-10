@@ -35,7 +35,7 @@ from src.algo.global_ranking import global_ranking_of_eventdata
 from src.algo.super_graph import build_super_graph
 from src.analysis.data_extraction import get_occurring_entries
 from src.analysis.privacy import max_zoom
-from src.analysis.privacy.privacy_checker import delete_trace, check_metrics
+from src.analysis.privacy.privacy_checker import delete_trace, check_metrics, delete_trace2
 from src.clustering import general_clusterer, numerical_clusterer
 from src.clustering.specific_clusterer import CycleDetectedException
 from src.orchestrator import process_log_for_d3js_abstractions
@@ -191,7 +191,7 @@ def get_abstracted_data():
         if config.get("DELETE_TRACES", False):
             logger.debug("Deleting traces to enforce privacy")
             #TODO will not work
-            delete_trace(f"{FILEPATH}/volatile_working_xes.xes", config.get("K_TRACE", -1), config.get("K_EVENT", -1), config.get("K_EDGE", -1), config.get("L_DIV", 1))
+            df = delete_trace2(df,f"{FILEPATH}/max_zoom.xes", f"{FILEPATH}/persistent_log.xes", config.get("K_TRACE", -1), config.get("K_EVENT", -1), config.get("K_EDGE", -1), config.get("L_DIV", 1), config.get("SINGLE_EVENT_L_DIV", False), config.get("FOlLOW_EVENT_L_DIV", False))
         else:
             logger.debug("Check Privacy without deleting")
             privacy_matched =  check_metrics(xes_path, config.get("K_TRACE", -1), config.get("K_EVENT", -1), config.get("K_EDGE", -1), config.get("L_DIV", -1), config.get("SINGLE_EVENT_L_DIV", False), config.get("FOlLOW_EVENT_L_DIV", False))
