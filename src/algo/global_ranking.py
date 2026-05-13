@@ -20,6 +20,7 @@ E-Mail: {firstname.lastname}@hu-berlin.de
 '''
 import logging
 
+import pandas as pd
 # Ranking algorithms for event data
 import pm4py
 from src.utils.data_processing import create_dict_from_integer, filter_tuplekeys_by_prefix, sort_dict_by_values, switch_item_key_in_dictionary
@@ -155,3 +156,8 @@ def check_next_empty_item(dictionary: dict):
     for key in dictionary.keys():
         if dictionary[key] is None:
             return key
+
+def delete_columns(df: pd.DataFrame):
+    df.drop(columns=["time:timestamp:casestart", "timestamp_relative_seconds", "time:relative:seconds:log", "ranks",
+                     "activity", "time:timestamp:relative"], inplace=True, errors="ignore")
+    return df

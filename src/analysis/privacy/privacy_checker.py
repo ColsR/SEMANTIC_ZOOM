@@ -73,7 +73,7 @@ def check_metrics(xes_path, k_trace=-1, k_event=-1, k_edge=-1, l_div=-1, single_
 
 
 
-def delete_trace2(df, max_zoom_path, persistent_path, min_k_trace=-1, min_k_event=-1, min_k_edge=-1, l_div=-1, single_event_l_div=False, follow_event_l_div=False):
+def delete_trace(df, max_zoom_path, min_k_trace=-1, min_k_event=-1, min_k_edge=-1, l_div=-1, single_event_l_div=False, follow_event_l_div=False):
     log = load_event_log(max_zoom_path)
     privacy_reached = False
     cases_to_delete = set()
@@ -92,7 +92,7 @@ def delete_trace2(df, max_zoom_path, persistent_path, min_k_trace=-1, min_k_even
             for event_hash, k_val in event_k_map.items():
                 if k_val < min_k_event:
                     event_hashes.append(event_hash)
-            filtered_event_case_ids = delete_event_by_hash(max_zoom_path, event_hashes, log)
+            filtered_event_case_ids, log = delete_event_by_hash(max_zoom_path, event_hashes, log)
             cases_to_delete = cases_to_delete.union(filtered_event_case_ids)
             event_privacy_reached = event_privacy_reached and filtered_event_case_ids == []
             if not event_privacy_reached:
@@ -106,7 +106,7 @@ def delete_trace2(df, max_zoom_path, persistent_path, min_k_trace=-1, min_k_even
             for trace_hash_tuple, k_val in edge_k_map.items():
                 if k_val < min_k_edge:
                     edges_hashes.append(trace_hash_tuple)
-            filtered_edge_case_ids = delete_edge_by_hash(max_zoom_path, edges_hashes, log)
+            filtered_edge_case_ids, log = delete_edge_by_hash(max_zoom_path, edges_hashes, log)
             cases_to_delete = cases_to_delete.union(filtered_edge_case_ids)
             edge_privacy_reached = edge_privacy_reached and filtered_edge_case_ids == []
             if not edge_privacy_reached:
@@ -120,7 +120,7 @@ def delete_trace2(df, max_zoom_path, persistent_path, min_k_trace=-1, min_k_even
             for trace_hash, k_val in trace_k_map.items():
                 if k_val < min_k_trace:
                     trace_hashes.append(trace_hash)
-            filtered_trace_case_ids = delete_trace_by_hash(max_zoom_path, trace_hashes, log) and trace_privacy_reached
+            filtered_trace_case_ids, log = delete_trace_by_hash(max_zoom_path, trace_hashes, log) and trace_privacy_reached
             cases_to_delete = cases_to_delete.union(filtered_trace_case_ids)
             trace_privacy_reached = trace_privacy_reached and filtered_trace_case_ids== []
             if not trace_privacy_reached:
@@ -137,7 +137,7 @@ def delete_trace2(df, max_zoom_path, persistent_path, min_k_trace=-1, min_k_even
                     for _, l_div_val in l_div_values.items():
                         if l_div_val < l_div:
                             single_l_div_event_hashes.append(event_hash)
-                filtered_l_div_case_ids = delete_event_by_hash(max_zoom_path, single_l_div_event_hashes)
+                filtered_l_div_case_ids, log = delete_event_by_hash(max_zoom_path, single_l_div_event_hashes)
                 cases_to_delete = cases_to_delete.union(filtered_l_div_case_ids)
                 single_event_l_div_reached = single_event_l_div_reached and filtered_l_div_case_ids == []
                 if not single_event_l_div_reached:
@@ -152,7 +152,7 @@ def delete_trace2(df, max_zoom_path, persistent_path, min_k_trace=-1, min_k_even
                     for _, l_div_val in l_div_values.items():
                         if l_div_val < l_div:
                             follow_l_div_event_hashes.append(event_hash)
-                filtered_l_div_case_ids = delete_event_by_hash(max_zoom_path, follow_l_div_event_hashes)
+                filtered_l_div_case_ids, log = delete_event_by_hash(max_zoom_path, follow_l_div_event_hashes)
                 cases_to_delete = cases_to_delete.union(filtered_l_div_case_ids)
                 follow_event_l_div_reached = follow_event_l_div_reached and filtered_l_div_case_ids == []
                 if not follow_event_l_div_reached:
@@ -162,23 +162,16 @@ def delete_trace2(df, max_zoom_path, persistent_path, min_k_trace=-1, min_k_even
 
         privacy_reached = True
 
-    # the max_zoom.xes is the data strucutre the algorithm is worjing with and therefore the cases are deleted there automatically
-    # delete the cases also in all other datastructures
-    max_zoom.filter_by_cases(cases_to_delete)
-
-    persistent_log = load_event_log(persistent_path)
-    filtered_persistent_event_log = filter_eventlog_by_cases(persistent_log, cases_to_delete)
-    if len(filtered_persistent_event_log) > 0:
-        pm4py.write_xes(deepcopy(filtered_persistent_event_log), persistent_path)
-    else:
-        empty_df = get_dummy_df()
-        pm4py.write_xes(empty_df, persistent_path)
+    # the max_zoom.xes is the data structure the algorithm is working with and therefore the cases are deleted there automatically
+    # after detection which cases need to be removed the dataframe that is passed to the Frontend is filtered by these cases
+    # the max_zoom.xes datastructure is reverted to its original state by exporting the in-memory max_zoom dataframe again
+    max_zoom.export_max_zoom_df()
 
     return df[~df["case:concept:name"].isin(cases_to_delete)]
 
 
 # returns the case ids of the deleted traces
-def delete_event_by_hash(file_path:str, event_hashes_to_delete, log=None) -> list[str]:
+def delete_event_by_hash(file_path:str, event_hashes_to_delete, log=None):
     if log is None:
         log = load_event_log(str(file_path))
     logger.debug(f"deleting event: {event_hashes_to_delete}")
@@ -188,16 +181,16 @@ def delete_event_by_hash(file_path:str, event_hashes_to_delete, log=None) -> lis
             event_hash = hash(event)
             if event_hash in event_hashes_to_delete:
                 filtered_case_ids.append(trace.attributes["concept:name"])
-    filtered_log = filter_eventlog_by_cases(log, filtered_case_ids)
-    if len(filtered_log) > 0:
+    log = filter_eventlog_by_cases(log, filtered_case_ids)
+    if len(log) > 0:
         logger.debug(f"deleting event: {event_hashes_to_delete}")
-        pm4py.write_xes(deepcopy(filtered_log), file_path)
+        pm4py.write_xes(deepcopy(log), file_path) #
     else:
         empty_df = get_dummy_df()
-        pm4py.write_xes(empty_df, file_path)
-    return filtered_case_ids
+        pm4py.write_xes(empty_df, file_path) #
+    return filtered_case_ids, log
 
-def delete_edge_by_hash(file_path:str, edge_hashes_to_delete, log=None) -> list[str]:
+def delete_edge_by_hash(file_path:str, edge_hashes_to_delete, log=None):
     if log is None:
         log = load_event_log(str(file_path))
     logger.debug(f"deleting edge: {edge_hashes_to_delete}")
@@ -215,13 +208,13 @@ def delete_edge_by_hash(file_path:str, edge_hashes_to_delete, log=None) -> list[
     filtered_log = filter_eventlog_by_cases(log, filtered_case_ids)
     if len(filtered_log) > 0:
         logger.debug(f"deleting edge: {edge_hashes_to_delete}")
-        pm4py.write_xes(deepcopy(filtered_log), file_path)
+        pm4py.write_xes(deepcopy(filtered_log), file_path) #
     else:
         empty_df = get_dummy_df()
-        pm4py.write_xes(empty_df, file_path)
-    return filtered_case_ids
+        pm4py.write_xes(empty_df, file_path) #
+    return filtered_case_ids, log
 
-def delete_trace_by_hash(file_path:str, trace_hashes, log=None) -> list[str]:
+def delete_trace_by_hash(file_path:str, trace_hashes, log=None):
     if log is None:
         log = load_event_log(str(file_path))
     logger.debug(f"deleting trace: {trace_hashes}")
@@ -235,11 +228,11 @@ def delete_trace_by_hash(file_path:str, trace_hashes, log=None) -> list[str]:
     filtered_log = filter_eventlog_by_cases(log, filtered_case_ids)
     if len(filtered_log) > 0:
         logger.debug(f"deleting trace: {trace_hashes}")
-        pm4py.write_xes(deepcopy(filtered_log), file_path)
+        pm4py.write_xes(deepcopy(filtered_log), file_path) #
     else:
         empty_df = get_dummy_df()
-        pm4py.write_xes(empty_df, file_path)
-    return filtered_case_ids
+        pm4py.write_xes(empty_df, file_path) #
+    return filtered_case_ids, log
 
 def filter_eventlog_by_cases(log, cases_to_remove):
     filtered_traces = [

@@ -1,6 +1,7 @@
 import copy
 from abc import ABC, abstractmethod
 
+import numpy as np
 import pandas as pd
 
 from src.analysis.privacy import max_zoom
@@ -53,21 +54,19 @@ class AbstractClusterer(ABC):
                 rank_col = f"rank_{abstraction_obj.target_col}"
                 current_ranks = max_zoom_df.loc[abstraction_obj.mask, rank_col]
 
-                update_mask = pd.Series(abstraction_obj.mask.copy())
-                update_mask.loc[abstraction_obj.mask] = (
-                        abstraction_obj.ranking > current_ranks
-                )
+                mask = np.array(abstraction_obj.mask, dtype=bool)
+                comparison = (abstraction_obj.ranking > current_ranks).to_numpy()
 
-                new_values = df_unabstracted.loc[update_mask, abstraction_obj.source_col].apply(
+                update_mask = pd.Series(False, index=max_zoom_df.index)
+                update_mask.iloc[mask] = comparison
+                idx = update_mask.to_numpy()
+
+                new_values = df_unabstracted.loc[idx, abstraction_obj.source_col].apply(
                     lambda x: abstraction_obj.apply_abstraction(copy.deepcopy(x))
                 )
 
-                max_zoom_df.loc[update_mask, abstraction_obj.target_col] = new_values
-
-                # Rank setzen
-                max_zoom_df.loc[update_mask, rank_col] = abstraction_obj.ranking
-
-
+                max_zoom_df.loc[idx, abstraction_obj.target_col] = new_values
+                max_zoom_df.loc[idx, rank_col] = abstraction_obj.ranking
 
         return df
 

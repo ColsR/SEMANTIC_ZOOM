@@ -26,7 +26,7 @@ from pathlib import Path
 
 import pandas as pd
 
-from src.algo.global_ranking import global_ranking_of_eventdata
+from src.algo.global_ranking import global_ranking_of_eventdata, delete_columns
 from src.clustering import general_clusterer, specific_clusterer
 from src.utils.data_processing import rename_cols_for_d3csv, convert_timecols_to_string
 from src.utils.data_processing import simplifyLog, relativeTimestamps
@@ -59,6 +59,7 @@ def process_log_for_d3js_abstractions(df, requested_clusters, sp_zooms):
     df_proc = simplifyLog(df_proc)
     df_proc = relativeTimestamps(df_proc)
     df_proc, _ = global_ranking_of_eventdata(df_proc)
+    df_proc = delete_columns(df_proc)
 
 
     # Mask for standard abstraction: abstract every entry

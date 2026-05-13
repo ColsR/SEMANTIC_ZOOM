@@ -1,3 +1,4 @@
+import copy
 from pathlib import Path
 
 import pandas as pd
@@ -31,7 +32,7 @@ def filter_by_cases(cases_to_delete):
 
 def export_max_zoom_df():
     global max_zoom_df
-    df_to_export = max_zoom_df.copy()
+    df_to_export = copy.deepcopy(max_zoom_df)
     cols_to_drop = [col for col in df_to_export.columns if "rank_" in col]
     df_to_export = df_to_export.drop(columns=cols_to_drop)
     export_event_log_custom(df_to_export,f'{FILEPATH}/max_zoom.xes')
